@@ -131,5 +131,7 @@ MIT License
 ---
 
 ## 👨‍💻 Author
-
-**Pratik Kumar**
+    **Team Member**
+**Pratik Kumar Singh **
+**Yash Verma**
+**RaviRala Rohith**
