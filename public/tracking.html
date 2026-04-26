@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Track Status • Academic Debate</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  </head>
+  <body>
+    <div id="navbarMount"></div>
+
+    <main class="container pad" style="max-width: 800px; margin-top: 40px;">
+      <h1 style="margin-bottom: 8px;">Track Debate Status</h1>
+      <p class="muted" style="margin-bottom: 24px;">View the approval progress of your submitted debates in real-time.</p>
+      
+      <div class="card pad" style="border-radius: 24px;">
+      <h2 style="margin: 0 0 20px 0;">Track Pending Debates</h2>
+      <div id="trackingMount"></div>
+    </div>
+
+    <!-- Match History Section -->
+    <div class="card pad" style="border-radius: 24px; margin-top: 40px;">
+      <div class="row">
+        <h2 style="margin: 0;">Match History</h2>
+        <div class="spacer"></div>
+        <span class="badge" id="historyCount">0</span>
+      </div>
+      <div id="historyMount" style="margin-top: 20px; display: flex; flex-direction: column; gap: 16px;"></div>
+    </div>
+  </main>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/ui.js"></script>
+    <script src="/js/ai-widget.js"></script>
+    <script src="/js/pages/tracking.js"></script>
+  </body>
+</html>

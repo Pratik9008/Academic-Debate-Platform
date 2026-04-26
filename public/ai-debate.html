@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Debate vs Robot • Academic Debate</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <style>
+    .chat-box { height: 500px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; padding: 20px; border: 1px solid var(--border); border-radius: 16px; background: var(--bg0); margin-bottom: 20px; }
+    .msg { max-width: 80%; padding: 16px; border-radius: 16px; line-height: 1.5; position: relative; animation: fadeInUp 0.3s ease-out forwards; }
+    .msg.user { align-self: flex-end; background: var(--accent1); color: white; border-bottom-right-radius: 4px; }
+    .msg.bot { align-self: flex-start; background: var(--bg1); border: 1px solid var(--border); border-bottom-left-radius: 4px; }
+    .msg-name { font-size: 12px; font-weight: bold; margin-bottom: 6px; opacity: 0.8; }
+    
+    .scorecard { padding: 30px; background: white; color: black; border-radius: 12px; margin-top: 20px; }
+    .scorecard h1 { color: #111; border-bottom: 2px solid #ccc; padding-bottom: 10px; }
+    .scorecard-grade { font-size: 48px; font-weight: 900; color: #7c3aed; text-align: center; margin: 20px 0; }
+  </style>
+</head>
+<body>
+  <div id="navbarMount"></div>
+
+  <main class="container pad" style="max-width: 800px; margin-top: 40px;">
+    <div class="row" style="margin-bottom: 20px;">
+      <div>
+        <div class="tag"><i></i> Single Player Mode</div>
+        <h1 style="margin: 8px 0 0 0;">Debate vs AI Robot</h1>
+      </div>
+      <div class="spacer"></div>
+      <div id="roundIndicator" class="badge good">Round 1 of 3</div>
+    </div>
+
+    <!-- The Game Area -->
+    <div id="gameArea">
+      <div class="chat-box" id="chatBox">
+        <div class="msg bot">
+          <div class="msg-name">🤖 Master AI</div>
+          Welcome! State your opening argument on any topic, and I will counter it. We will debate for 3 rounds.
+        </div>
+      </div>
+
+      <div class="row" style="gap:10px;">
+        <input type="text" id="userInput" class="input" placeholder="Type your argument..." style="flex:1;" />
+        <button class="btn btn-secondary" id="micBtn" title="Use Voice to Text" style="padding: 0 16px; font-size: 20px;">🎤</button>
+        <button class="btn btn-primary" id="sendBtn">Send Argument</button>
+      </div>
+    </div>
+
+    <!-- The Report Area (Hidden until game over) -->
+    <div id="reportArea" style="display:none; text-align:center;">
+      <h2 style="margin-bottom: 10px;">Debate Finished!</h2>
+      <p class="muted" style="margin-bottom: 20px;">The AI Judge has evaluated your performance.</p>
+      
+      <div class="row" style="justify-content:center; gap:16px;">
+        <button class="btn btn-primary" id="downloadPdfBtn">Download PDF Scorecard</button>
+        <button class="btn btn-secondary" onclick="location.reload()">Play Again</button>
+      </div>
+
+      <!-- PDF Content Container -->
+      <div id="pdfContent" class="scorecard">
+        <h1>Academic Debate Scorecard</h1>
+        <p><strong>Mode:</strong> Player vs AI Robot</p>
+        <p><strong>Date:</strong> <span id="pdfDate"></span></p>
+        
+        <div class="scorecard-grade" id="pdfScore">0/100</div>
+        
+        <h3>Judge's Feedback:</h3>
+        <p id="pdfFeedback" style="line-height: 1.6; text-align: left;"></p>
+        
+        <h3 style="margin-top:30px;">Transcript:</h3>
+        <div id="pdfTranscript" style="text-align: left; font-size: 14px; color: #444;"></div>
+      </div>
+    </div>
+
+  </main>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/ui.js"></script>
+  <script src="/js/pages/ai-debate.js"></script>
+</body>
+</html>

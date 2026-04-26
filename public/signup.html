@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Signup • Academic Debate</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/css/styles.css" />
+  </head>
+  <body class="auth-bg">
+    <canvas id="particlesCanvas" style="position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;"></canvas>
+    <main class="container auth-shell">
+      <div class="auth-brand">
+        <div class="logo"></div>
+        <div>
+          <div class="name">Academic Debate Platform</div>
+          <div class="sub">Premium structured rounds • modern UX</div>
+        </div>
+      </div>
+
+      <div class="card auth-card">
+        <div class="auth-head">
+          <div style="flex:1">
+            <h2 class="auth-title" style="text-align:center;margin-top:0">Create account</h2>
+            <div class="muted" style="margin-top:8px;line-height:1.55;text-align:center">
+              Join debates, earn reputation, and build better arguments.
+            </div>
+          </div>
+        </div>
+
+        <div class="auth-body">
+        <form id="signupForm" class="form-grid" style="margin-top:10px">
+          <div>
+            <div class="label">Name</div>
+            <input class="input" id="name" maxlength="80" required placeholder="Your name" />
+          </div>
+          <div>
+            <div class="label">Email</div>
+            <input
+              class="input"
+              id="email"
+              type="email"
+              required
+              placeholder="yourname@gmail.com"
+              pattern="^[^\s@]+@gmail\.com$"
+              title="Please enter a valid Gmail address (example@gmail.com)"
+            />
+          </div>
+          <div class="split">
+            <div>
+              <div class="label">Password</div>
+              <input class="input" id="password" type="password" minlength="6" required placeholder="Minimum 6 characters" />
+            </div>
+            <div>
+              <div class="label">Confirm Password</div>
+              <input class="input" id="confirmPassword" type="password" minlength="6" required placeholder="Repeat password" />
+            </div>
+          </div>
+          <div class="row" style="gap:12px;flex-wrap:wrap">
+            <button class="btn btn-secondary" type="submit" style="flex:1;min-width:180px">Create account</button>
+            <a class="btn btn-ghost" href="/login.html" style="flex:1;min-width:180px">Back to login</a>
+          </div>
+          <div class="help">
+            Passwords are securely hashed with <strong>bcrypt</strong>. Auth uses <strong>JWT</strong> stored in localStorage.
+          </div>
+        </form>
+        </div>
+      </div>
+    </main>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/ui.js"></script>
+    <script src="/js/particles.js"></script>
+    <script src="/js/pages/signup.js"></script>
+  </body>
+</html>
+

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Settings • Academic Debate</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/css/styles.css" />
+  </head>
+  <body>
+    <div id="navbarMount"></div>
+
+    <main class="container pad" style="max-width: 600px; margin-top: 40px;">
+      <h1 style="margin-bottom: 20px;">Settings</h1>
+      
+      <div class="card pad" style="animation: fadeInUp 0.4s ease-out forwards;">
+        <h2 style="font-size: 18px; margin-bottom: 16px;">Profile Information</h2>
+        
+        <form id="settingsForm" style="display: flex; flex-direction: column; gap: 16px;">
+          <div>
+            <label style="display:block; margin-bottom: 8px; font-weight: 500;">Display Name</label>
+            <input type="text" id="nameInput" class="input" required style="width: 100%;" placeholder="Your full name" />
+          </div>
+          
+          <div>
+            <label style="display:block; margin-bottom: 8px; font-weight: 500;">Bio</label>
+            <textarea id="bioInput" class="input" style="width: 100%; min-height: 100px; resize: vertical;" placeholder="Tell us about your academic background..."></textarea>
+          </div>
+          
+          <div style="display: flex; justify-content: flex-end; margin-top: 10px;">
+            <button type="submit" class="btn btn-primary" id="saveBtn">Save Changes</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="card pad" style="margin-top: 20px; animation: fadeInUp 0.5s ease-out forwards;">
+        <h2 style="font-size: 18px; margin-bottom: 16px;">Preferences</h2>
+        <p class="muted">Currently, theme preferences are saved automatically when toggled in the navbar.</p>
+      </div>
+    </main>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/ui.js"></script>
+    <script src="/js/ai-widget.js"></script>
+    <script src="/js/pages/settings.js"></script>
+  </body>
+</html>

@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Debate • Academic Debate</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <script>
+      if (!localStorage.getItem("adp_token")) location.replace("/login.html");
+    </script>
+  </head>
+  <body>
+    <div id="navbarMount"></div>
+
+    <main class="container" style="padding:22px 0">
+      <div class="two-col">
+        <section>
+          <div class="card pad" style="border-radius:24px">
+            <div class="row" style="align-items:flex-start;flex-wrap:wrap">
+              <div style="flex:1;min-width:min(520px,92vw)">
+                <div class="row" style="gap:10px;flex-wrap:wrap">
+                  <span class="tag" id="debateCategory"><i></i> Category</span>
+                  <span class="badge" id="debateStatus">status</span>
+                  <span class="badge danger" id="countdownBadge" style="display:none;"></span>
+                  <span class="badge warn" id="roundBadge" style="display:none;">Round</span>
+                  <span class="badge" id="roundStateBadge" style="display:none;">open</span>
+                </div>
+                <h2 id="debateTitle" style="margin:10px 0 0">Loading…</h2>
+                <div class="muted" id="debateDesc" style="margin-top:8px;line-height:1.55"></div>
+                <div class="muted2" id="debateMeta" style="margin-top:10px;font-size:12px"></div>
+              </div>
+              <div style="width:min(340px,92vw)">
+                <div class="card pad" style="border-radius:22px; text-align: center;">
+                  <h3 style="margin-top:0">Participate</h3>
+                  <p class="muted" style="font-size: 13px; line-height: 1.5; margin-bottom: 15px;">
+                    Read the topic carefully and submit your strongest argument. AI will evaluate your logic.
+                  </p>
+                  <button class="btn btn-primary" id="openPostBtn" style="width: 100%; padding: 12px; font-size: 16px;">🗣️ Post Your Argument</button>
+                  <div class="help" id="roundHelp" style="margin-top:10px;"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          </div>
+
+          <div class="card pad" id="rankingsPodium" style="margin-top:14px;border-radius:24px;display:none;background:var(--bg1);">
+            <div class="row">
+              <h2 style="margin:0; color:var(--good);">🏆 Final AI Rankings</h2>
+              <div class="spacer"></div>
+              <div class="badge good">Graded by Master AI</div>
+            </div>
+            <div class="muted" style="margin-top:8px;font-size:13px;line-height:1.5">
+              The AI has evaluated all arguments based on logic, structure, and relevance.
+            </div>
+            <div class="grid" id="rankingsMount" style="margin-top:12px"></div>
+          </div>
+
+          <div class="card pad" style="margin-top:14px;border-radius:24px">
+            <div class="row">
+              <h2 style="margin:0">Thread</h2>
+            </div>
+            <div class="muted" style="margin-top:8px;font-size:13px;line-height:1.5">
+              Submit your argument to join the discussion. AI will grade your response when the timer ends.
+            </div>
+            <div class="thread" id="threadMount" style="margin-top:12px"></div>
+          </div>
+        </section>
+
+        <aside class="card pad" style="border-radius:24px">
+          <div class="row">
+            <h2 style="margin:0">Admin Actions</h2>
+            <div class="spacer"></div>
+            <span class="badge" id="roleBadge">guest</span>
+          </div>
+          <div class="form-grid" style="margin-top:14px">
+            <button class="btn btn-good" id="approveBtn" style="display:none">Approve debate</button>
+            <button class="btn" style="background:var(--danger); display:none;" id="deleteDebateBtn">Delete debate</button>
+          </div>
+          
+          <div class="card pad" style="margin-top:14px;border-radius:24px">
+            <h2 style="margin:0 0 10px">Analytics</h2>
+            <canvas id="analyticsChart" style="width:100%;max-height:200px"></canvas>
+            <div class="muted" style="margin-top:8px;font-size:12px;text-align:center">Score distribution of top arguments</div>
+          </div>
+        </aside>
+      </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <div class="modal" id="postModal">
+      <div class="card panel">
+        <div class="head">
+          <div style="font-weight:900">Post your argument</div>
+          <div class="spacer"></div>
+          <button class="btn btn-sm btn-ghost" id="postClose">Close</button>
+        </div>
+        <div class="body">
+          <form id="postForm" class="form-grid">
+            <div>
+              <div class="label">Argument content</div>
+              <textarea class="input" id="postContent" rows="5" maxlength="4000" placeholder="Make your case with clarity. Anticipate counterpoints." required></textarea>
+              <div class="help" style="margin-top:6px">Tip: Use evidence and keep it civil—moderators can delete or ban.</div>
+            </div>
+            <input type="hidden" id="parentArgumentId" value="" />
+            <div class="row" style="justify-content:flex-end">
+              <button class="btn btn-primary" type="submit">Publish</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal" id="commentModal">
+      <div class="card panel">
+        <div class="head">
+          <div style="font-weight:900">Reply</div>
+          <div class="spacer"></div>
+          <button class="btn btn-sm btn-ghost" id="commentClose">Close</button>
+        </div>
+        <div class="body">
+          <form id="commentForm" class="form-grid">
+            <div>
+              <div class="label">Reply content</div>
+              <textarea class="input" id="commentContent" rows="4" maxlength="2000" placeholder="Reply in a helpful, structured way." required></textarea>
+            </div>
+            <input type="hidden" id="commentArgumentId" value="" />
+            <div class="row" style="justify-content:flex-end">
+              <button class="btn btn-primary" type="submit">Reply</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/ui.js"></script>
+    <script src="/js/ai-widget.js"></script>
+    <script src="/js/pages/debate.js"></script>
+  </body>
+</html>
+

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Play Arena • Academic Debate</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <style>
+    .mode-card { background: var(--bg1); border: 2px solid var(--border); border-radius: 24px; padding: 40px; text-align: center; cursor: pointer; transition: all 0.3s; position: relative; overflow: hidden; }
+    .mode-card:hover { transform: translateY(-5px); border-color: var(--accent1); box-shadow: 0 10px 30px rgba(124, 58, 237, 0.2); }
+    .mode-icon { font-size: 64px; margin-bottom: 20px; }
+    .mode-title { font-size: 24px; font-weight: bold; margin-bottom: 10px; }
+    .mode-desc { color: var(--muted); line-height: 1.5; margin-bottom: 24px; }
+    .mode-badge { position: absolute; top: 16px; right: 16px; background: rgba(16, 185, 129, 0.2); color: var(--good); padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <div id="navbarMount"></div>
+
+  <main class="container pad" style="margin-top: 40px; text-align: center;">
+    <div class="tag" style="margin: 0 auto 16px auto;"><i></i> Debate Arena</div>
+    <h1 style="font-size: 42px; margin: 0 0 16px 0;">Choose Your Opponent</h1>
+    <p class="muted" style="max-width: 600px; margin: 0 auto 40px auto; font-size: 16px;">
+      Step into the arena. Test your argumentation skills against our advanced AI Robot or challenge a real student live. Both modes include AI grading and a downloadable PDF scorecard.
+    </p>
+
+    <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; max-width: 900px; margin: 0 auto;">
+      
+      <!-- AI Mode -->
+      <a href="/ai-debate.html" class="mode-card" style="display:block; text-decoration:none; color:inherit;">
+        <div class="mode-icon">🤖</div>
+        <div class="mode-title">Play Against Robot</div>
+        <div class="mode-desc">Debate directly against our Gemini AI model. A great way to practice formulating arguments under pressure.</div>
+        <div class="btn btn-primary" style="width: 100%;">Start AI Match</div>
+      </a>
+
+      <!-- Live Mode -->
+      <a href="/live-debate.html" class="mode-card" style="display:block; text-decoration:none; color:inherit;">
+        <div class="mode-badge">LIVE</div>
+        <div class="mode-icon">👤</div>
+        <div class="mode-title">Play Against Student</div>
+        <div class="mode-desc">Connect with another student online. Engage in a timed, 3-round live debate over WebSockets.</div>
+        <div class="btn btn-secondary" style="width: 100%; border: 1px solid var(--accent2); color: var(--accent2);">Find Match</div>
+      </a>
+
+    </div>
+  </main>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/ui.js"></script>
+  <script src="/js/ai-widget.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      UI.initTheme();
+      UI.mountNavbar("play");
+      if (!UI.mustAuth()) return;
+    });
+  </script>
+</body>
+</html>

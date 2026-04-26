@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SaaS Admin Panel</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { margin: 0; padding: 0; display: flex; height: 100vh; overflow: hidden; background: var(--bg0); }
+    .sidebar { width: 260px; background: var(--bg1); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 20px; }
+    .sidebar-logo { font-size: 20px; font-weight: 700; color: white; margin-bottom: 40px; display: flex; align-items: center; gap: 10px; }
+    .sidebar-menu { flex: 1; display: flex; flex-direction: column; gap: 10px; }
+    .sidebar-link { padding: 12px 16px; border-radius: 8px; color: var(--muted); text-decoration: none; font-weight: 500; transition: all 0.2s; cursor: pointer; }
+    .sidebar-link:hover, .sidebar-link.active { background: rgba(124, 58, 237, 0.1); color: var(--accent2); }
+    .main-content { flex: 1; padding: 40px; overflow-y: auto; }
+    .stat-card { background: var(--bg1); padding: 24px; border-radius: 16px; border: 1px solid var(--border); }
+    .stat-value { font-size: 36px; font-weight: bold; margin-top: 10px; color: white; }
+    .admin-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    .admin-table th, .admin-table td { text-align: left; padding: 14px; border-bottom: 1px solid var(--border); }
+    .admin-table th { color: var(--muted); font-size: 13px; text-transform: uppercase; letter-spacing: 1px; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; animation: fadeInUp 0.3s ease-out forwards; }
+  </style>
+</head>
+<body>
+
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div style="width:24px; height:24px; background:var(--accent2); border-radius:6px;"></div>
+      <span id="adminNameDisplay">SaaS Admin</span>
+    </div>
+    <nav class="sidebar-menu">
+      <div class="sidebar-link active" data-tab="dashboard">📊 Dashboard Analytics</div>
+      <div class="sidebar-link" data-tab="users">👥 Manage Users</div>
+      <div class="sidebar-link" data-tab="debates">⚖️ Manage Debates</div>
+      <div class="sidebar-link" data-tab="matches">🏁 Match History</div>
+      <a class="sidebar-link" style="margin-top:auto;" href="/index.html">⬅️ Back to Platform</a>
+    </nav>
+  </aside>
+
+  <main class="main-content">
+    
+    <!-- DASHBOARD TAB -->
+    <div id="dashboard" class="tab-content active">
+      <h1 style="margin:0 0 24px 0">Platform Overview</h1>
+      <div class="grid" style="grid-template-columns: repeat(5, 1fr); gap: 16px; margin-bottom: 40px;">
+        <div class="stat-card" style="padding:16px; cursor:pointer;" onclick="document.querySelector('[data-tab=users]').click()">
+          <div class="muted" style="font-size:12px;">Total Users</div>
+          <div class="stat-value" id="totalUsersStat" style="font-size:24px;">--</div>
+        </div>
+        <div class="stat-card" style="padding:16px; cursor:pointer;" onclick="document.querySelector('[data-tab=debates]').click()">
+          <div class="muted" style="font-size:12px;">Standard Debates</div>
+          <div class="stat-value" id="totalDebatesStat" style="font-size:24px;">--</div>
+        </div>
+        <div class="stat-card" style="padding:16px; cursor:pointer;" onclick="document.querySelector('[data-tab=debates]').click()">
+          <div class="muted" style="font-size:12px;">Pending Approvals</div>
+          <div class="stat-value" id="pendingStat" style="font-size:24px; color:var(--warn)">--</div>
+        </div>
+        <div class="stat-card" style="padding:16px; cursor:pointer;" onclick="document.querySelector('[data-tab=matches]').click()">
+          <div class="muted" style="font-size:12px;">🤖 AI Matches</div>
+          <div class="stat-value" id="aiMatchesStat" style="font-size:24px; color:var(--accent1)">--</div>
+        </div>
+        <div class="stat-card" style="padding:16px; cursor:pointer;" onclick="document.querySelector('[data-tab=matches]').click()">
+          <div class="muted" style="font-size:12px;">👤 Live Matches</div>
+          <div class="stat-value" id="liveMatchesStat" style="font-size:24px; color:var(--good)">--</div>
+        </div>
+      </div>
+      
+      <div class="card pad" style="height: 400px; display:flex; flex-direction:column;">
+        <h3>Platform Growth</h3>
+        <div style="flex:1; position:relative;">
+          <canvas id="growthChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- DEBATES TAB -->
+    <div id="debates" class="tab-content">
+      <div class="row" style="margin-bottom: 24px;">
+        <h1 style="margin:0">Platform Debates</h1>
+        <div class="spacer"></div>
+        <button class="btn btn-secondary" id="generateDemoBtn" style="margin-right: 10px;">🚀 Generate Demo Schedule</button>
+        <button class="btn btn-primary" id="refreshDebates">Refresh List</button>
+      </div>
+      <div class="card pad">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Category</th>
+              <th>Author</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="debatesTableBody">
+            <tr><td colspan="4" class="muted" style="text-align:center;">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- USERS TAB -->
+    <div id="users" class="tab-content">
+      <h1 style="margin:0 0 24px 0">Manage Users</h1>
+      <div class="card pad">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Reputation</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="usersTableBody">
+            <tr><td colspan="5" class="muted" style="text-align:center;">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- MATCHES TAB -->
+    <div id="matches" class="tab-content">
+      <h1 style="margin:0 0 24px 0">Match History</h1>
+      <div class="card pad">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>Opponent</th>
+              <th>Mode</th>
+              <th>Score</th>
+              <th>Date</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="matchesTableBody">
+            <tr><td colspan="6" class="muted" style="text-align:center;">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/ui.js"></script>
+  <script src="/js/pages/admin.js"></script>
+</body>
+</html>
