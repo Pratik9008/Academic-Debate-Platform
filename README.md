@@ -1,82 +1,135 @@
-# 🎓 Academic Debate Platform
+# 🧠 Academic Debate Platform
 
-Full-stack debate platform with structured rounds, threaded arguments, voting, moderation tools, archive, bookmarks, and notifications.
+![Node.js](https://img.shields.io/badge/Node.js-Backend-green)
+![MongoDB](https://img.shields.io/badge/MongoDB-Database-brightgreen)
+![License](https://img.shields.io/badge/License-MIT-blue)
+![Status](https://img.shields.io/badge/Status-Active-success)
 
-## Tech stack
+> A full-stack web platform for structured academic debates with AI-powered assistance.
 
-- Frontend: HTML5, CSS3, Vanilla JavaScript (`/public`)
-- Backend: Node.js + Express (`server.js`, `/src`)
-- Database: MongoDB + Mongoose
+---
 
-## Features
+## 🌐 Live Demo
 
-- Auth: signup/login, bcrypt password hashing, JWT auth, token in `localStorage`
-- Roles: `user`, `moderator`, `admin`
-- Homepage: premium glass navbar, hero CTA, trending debates, categories, leaderboard
-- Debates: create, approve, start/end/advance rounds, archive completed
-- Arguments: one post per user per round, threaded replies, votes, reports
-- Moderator: delete arguments, ban/unban users, approve debates, round controls
-- Profile: bio/name edit, participation history, reputation, bookmarks, notifications
+👉 https://debate-platform-3iik.onrender.com
 
-## Setup
+---
 
-### 1) Install dependencies
+## 📌 Overview
+
+The **Academic Debate Platform** allows users to engage in structured debates, submit arguments, and interact in a controlled academic environment. It also integrates AI assistance to enhance discussions.
+
+---
+
+## ✨ Features
+
+* 🗣️ Create & participate in debates
+* 💬 Argument & counterargument system
+* 🔐 User authentication (JWT आधारित)
+* 🤖 AI-powered responses (Groq API)
+* 👨‍⚖️ Moderator controls
+* 📊 Structured debate rounds
+* 💾 MongoDB database integration
+
+---
+
+## 🛠️ Tech Stack
+
+### Frontend
+
+* HTML
+* CSS
+* JavaScript
+
+### Backend
+
+* Node.js
+* Express.js
+
+### Database
+
+* MongoDB Atlas
+
+---
+
+## ⚙️ Installation
 
 ```bash
+git clone https://github.com/Pratik9008/Academic-Debate-Platform.git
+cd Academic-Debate-Platform
 npm install
 ```
 
-### 2) Configure environment
+---
 
-Create `.env` from `.env.example`:
+## 🔑 Environment Variables
 
-```bash
-copy .env.example .env
+Create a `.env` file in root directory:
+
+```env
+MONGODB_URI=your_mongodb_connection
+JWT_SECRET=your_secret_key
+GROQ_API_KEY=your_api_key
 ```
 
-Update `MONGODB_URI` if needed.
+---
 
-### 3) Start MongoDB
-
-Make sure MongoDB is running locally (or point `MONGODB_URI` to your cluster).
-
-### 4) Seed demo accounts + debates (recommended)
+## ▶️ Run Locally
 
 ```bash
-npm run seed
-```
-
-Creates:
-- `admin@adp.local` / `Password123!`
-- `moderator@adp.local` / `Password123!`
-
-### 5) Run the app
-
-Dev mode:
-
-```bash
-npm run dev
+node server.js
 ```
 
 Open:
-- `http://localhost:3000`
 
-## API (core)
+```
+http://localhost:3000
+```
 
-- `POST /api/auth/signup`
-- `POST /api/auth/login`
-- `GET /api/debates`
-- `POST /api/debates`
-- `POST /api/arguments`
-- `POST /api/vote`
-- `GET /api/archive`
+---
 
-## Folder structure
+## 📁 Project Structure
 
-- `public/` → HTML/CSS/JS frontend
-- `src/routes/` → API routes
-- `src/controllers/` → controllers
-- `src/models/` → Mongoose models
-- `src/middleware/` → auth/validation middleware
-- `server.js` → app entry point
+```
+├── src/
+│   ├── config/
+│   ├── controllers/
+│   ├── routes/
+│   ├── models/
+├── public/
+├── server.js
+├── package.json
+```
 
+---
+
+## 🚀 Deployment
+
+This project is deployed using **Render**.
+
+---
+
+## 🔮 Future Enhancements
+
+* 👍 Voting system
+* 📱 Mobile responsiveness
+* ⚡ Real-time debates (WebSockets)
+* 🏆 Leaderboard
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! Feel free to fork and submit PRs.
+
+---
+
+## 📜 License
+
+MIT License
+
+---
+
+## 👨‍💻 Author
+
+**Pratik Kumar**
