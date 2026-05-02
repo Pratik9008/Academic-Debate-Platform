@@ -12,4 +12,6 @@ const matchSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+matchSchema.index({ userId: 1, createdAt: -1 });
+
 module.exports = mongoose.model("Match", matchSchema);

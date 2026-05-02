@@ -42,9 +42,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           <div class="avatar"></div>
           <div>
             <div class="name">${escapeHtml(a.author?.name || "Unknown")}</div>
-            <div class="muted2" style="font-size:12px">${escapeHtml(a.author?.role || "")} • rep ${Number(
-      a.author?.reputation || 0
-    )} • ${UI.fmtDate(a.createdAt)}</div>
+            <div class="muted2" style="font-size:12px">${escapeHtml(a.author?.role || "")} • rep ${Math.max(0, a.author?.reputation || 0)} • ${UI.fmtDate(a.createdAt)}</div>
           </div>
           <div class="spacer"></div>
           <div class="badge" id="score-${a._id}">${Number(a.score || 0)}</div>
@@ -103,7 +101,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       const countdownBadge = document.getElementById("countdownBadge");
       if (d.status === "active" && d.endTime) {
         countdownBadge.style.display = "inline-flex";
-        startCountdown(new Date(d.endTime));
+        startCountdown(new Date(d.endTime), "🤖 AI Scoreboard in:");
       } else if (d.status === "upcoming" && d.startTime) {
         countdownBadge.style.display = "inline-flex";
         countdownBadge.classList.replace("danger", "warn");
@@ -125,8 +123,23 @@ document.addEventListener("DOMContentLoaded", async () => {
         // Hide entire Participate section for admin/moderator
         if (canMod) {
           if (participateCard) participateCard.style.display = "none";
+          const thText = document.getElementById("threadHelpText");
+          if (thText) thText.textContent = "Moderator View: Reviewing community arguments and maintaining discussion quality.";
         } else {
-          openPostBtn.style.display = (d.status === "active") ? "block" : "none";
+          const isActive = d.status === "active";
+          const already = data.hasParticipated;
+          
+          openPostBtn.style.display = isActive ? "block" : "none";
+          if (already) {
+            openPostBtn.disabled = true;
+            openPostBtn.textContent = "✅ Argument Submitted";
+            openPostBtn.classList.add("btn-ghost");
+            document.getElementById("roundHelp").textContent = "You have already participated in this round. AI will grade everyone soon!";
+          } else {
+            openPostBtn.disabled = false;
+            openPostBtn.textContent = "🗣️ Post Your Argument";
+            openPostBtn.classList.remove("btn-ghost");
+          }
         }
       }
 
@@ -231,19 +244,37 @@ document.addEventListener("DOMContentLoaded", async () => {
     const ctx = document.getElementById('analyticsChart');
     if (!ctx) return;
     
-    // Get top 5 arguments by score
-    const sorted = [...args].sort((a,b) => (b.score || 0) - (a.score || 0)).slice(0, 5);
-    const labels = sorted.map(a => (a.author?.name || "Unknown").split(" ")[0]);
-    const data = sorted.map(a => Math.max(a.score || 0, 0)); // Only positive scores for pie chart
-    
-    if (data.length === 0 || data.every(d => d === 0)) {
-       // Hide or clear if no data
-       return;
+    let labels, data, colors;
+
+    if (!args || args.length === 0) {
+      labels = ["Awaiting Arguments"];
+      data = [1];
+      colors = ['rgba(255, 255, 255, 0.08)'];
+    } else {
+      // Get top 5 arguments
+      const sorted = [...args].sort((a,b) => (b.score || 0) - (a.score || 0)).slice(0, 5);
+      labels = sorted.map(a => (a.author?.name || "Unknown").split(" ")[0]);
+      
+      const allZero = sorted.every(a => (a.score || 0) <= 0);
+      data = allZero ? sorted.map(() => 1) : sorted.map(a => Math.max(a.score || 0, 0.1));
+      
+      colors = [
+        'rgba(124, 58, 237, 0.8)',
+        'rgba(34, 211, 238, 0.8)',
+        'rgba(96, 165, 250, 0.8)',
+        'rgba(16, 185, 129, 0.8)',
+        'rgba(251, 191, 36, 0.8)'
+      ];
+      
+      if (allZero) {
+        colors = colors.map(c => c.replace('0.8', '0.2'));
+      }
     }
 
     if (analyticsChart) {
       analyticsChart.data.labels = labels;
       analyticsChart.data.datasets[0].data = data;
+      analyticsChart.data.datasets[0].backgroundColor = colors;
       analyticsChart.update();
     } else {
       analyticsChart = new Chart(ctx, {
@@ -252,13 +283,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           labels: labels,
           datasets: [{
             data: data,
-            backgroundColor: [
-              'rgba(124, 58, 237, 0.8)',
-              'rgba(34, 211, 238, 0.8)',
-              'rgba(96, 165, 250, 0.8)',
-              'rgba(16, 185, 129, 0.8)',
-              'rgba(251, 191, 36, 0.8)'
-            ],
+            backgroundColor: colors,
             borderWidth: 0
           }]
         },
@@ -293,16 +318,32 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   document.getElementById("postForm").addEventListener("submit", async (e) => {
     e.preventDefault();
+    const btn = e.submitter || document.querySelector("#postForm button[type='submit']");
+    const originalText = btn.textContent;
+    
     const content = document.getElementById("postContent").value.trim();
     const parentArgumentId = document.getElementById("parentArgumentId").value || null;
+    
     try {
+      btn.disabled = true;
+      btn.textContent = "Publishing...";
+      
       await API.request("/arguments", { method: "POST", body: { debateId: id, content, parentArgumentId }, auth: true });
-      UI.toast("Posted", "Your argument is now live in this round.");
+      
+      UI.toast("Success!", "Your argument has been posted.");
       postModal.classList.remove("open");
       document.getElementById("postContent").value = "";
       await load();
     } catch (err) {
       UI.toast("Could not post", err.message);
+      // If it's a conflict (already posted), just close the modal
+      if (err.message.includes("already posted")) {
+        postModal.classList.remove("open");
+        await load();
+      }
+    } finally {
+      btn.disabled = false;
+      btn.textContent = originalText;
     }
   });
 

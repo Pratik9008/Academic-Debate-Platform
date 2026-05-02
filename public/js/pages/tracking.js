@@ -27,14 +27,195 @@ document.addEventListener("DOMContentLoaded", async () => {
       document.head.appendChild(script);
     });
   }
+  async function downloadMatchPdf(match) {
+    const userName = API.state.user?.name || "Student";
+    const overlay = document.createElement("div");
+    overlay.style = "position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #000; z-index: 200000; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white;";
+    overlay.innerHTML = `<div class="spinner"></div><h2 style="margin-top:20px;">Preparing Scorecard...</h2><p>Please wait while we optimize the PDF</p>`;
+    document.body.appendChild(overlay);
 
-  function renderTimeline(debate) {
+    const hiddenWrapper = document.createElement("div");
+    // Absolute position at the top of the document for clean capture
+    hiddenWrapper.style = "position: absolute; top: 0; left: 0; width: 1200px; height: 1000px; opacity: 1; pointer-events: none; z-index: -1000; overflow: hidden; background: white;";
+    
+    const container = document.createElement("div");
+    // Mirroring Certificate style exactly: 1100px width with 50px internal padding
+    container.style = "width: 1100px; padding: 50px; background: white; color: #1a1a1a; font-family: sans-serif; box-sizing: border-box;"; 
+    container.innerHTML = `
+      <div style="width: 1000px; margin: 0 auto; padding: 40px; border: 3px solid #7c3aed; border-radius: 15px; background: white; box-sizing: border-box;">
+        <h1 style="color: #7c3aed; margin: 0 0 25px 0; text-align: center; font-size: 36px;">Official Debate Scorecard</h1>
+        <div style="display: flex; justify-content: space-between; border-bottom: 2px solid #e2e8f0; padding-bottom: 15px; margin-bottom: 30px; font-size: 18px;">
+          <div style="font-weight: 600;">Student: <span style="font-weight: 400;">${userName}</span></div>
+          <div style="font-weight: 600;">Opponent: <span style="font-weight: 400;">${escapeHtml(match.opponent)}</span></div>
+        </div>
+        <div style="text-align: center; margin: 30px 0;">
+          <div style="font-size: 14px; color: #64748b; text-transform: uppercase; letter-spacing: 3px; margin-bottom: 10px;">Performance Score</div>
+          <div style="font-size: 84px; font-weight: 800; color: #7c3aed; line-height: 1;">${match.score}<span style="font-size: 24px; color: #94a3b8; font-weight: 400;">/100</span></div>
+        </div>
+        <div style="background: #fdfaff; border-left: 6px solid #7c3aed; padding: 25px; margin-bottom: 35px; border-radius: 0 10px 10px 0;">
+          <h3 style="color: #7c3aed; margin: 0 0 10px 0; font-size: 20px;">Judge Feedback</h3>
+          <p style="font-style: italic; line-height: 1.8; color: #334155; margin: 0; font-size: 16px;">"${escapeHtml(match.feedback)}"</p>
+        </div>
+        <h3 style="color: #475569; margin: 0 0 10px 0; font-size: 18px; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">Debate Transcript</h3>
+        <div style="font-size: 14px; white-space: pre-wrap; background: #f8fafc; padding: 25px; border-radius: 10px; border: 1px solid #e2e8f0; color: #1e293b; line-height: 1.6;">${escapeHtml(match.transcript)}</div>
+      </div>
+    `;
+    hiddenWrapper.appendChild(container);
+    document.body.appendChild(hiddenWrapper);
+
+    try {
+      const html2pdf = await loadPdfLibrary();
+      await new Promise(r => setTimeout(r, 2000));
+      
+      await html2pdf().set({
+        margin: 0,
+        filename: `Scorecard_${match.score}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { 
+          scale: 2, 
+          useCORS: true, 
+          logging: false, 
+          scrollY: 0, 
+          scrollX: 0,
+          windowWidth: 1200
+        },
+        jsPDF: { unit: 'in', format: 'letter', orientation: 'landscape' }
+      }).from(container).save();
+      
+      UI.toast("Success", "Scorecard downloaded!");
+    } catch (e) {
+      UI.toast("Error", "Generation failed");
+    } finally {
+      document.body.removeChild(container);
+      document.body.removeChild(overlay);
+    }
+  }
+
+  window.downloadCertificate = async function(debateId, title, score) {
+    const userName = API.state.user?.name || "Student";
+    const dateStr = new Date().toLocaleDateString();
+
+    const overlay = document.createElement("div");
+    // Solid black background so the background capture is 100% hidden
+    overlay.style = "position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #000; z-index: 200000; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white;";
+    overlay.innerHTML = `<div class="spinner"></div><h2 style="margin-top:20px;">Preparing Certificate...</h2>`;
+    document.body.appendChild(overlay);
+
+    const hiddenWrapper = document.createElement("div");
+    hiddenWrapper.style = "position: absolute; top: 0; left: 0; width: 1200px; height: 1000px; opacity: 1; pointer-events: none; z-index: -1000; overflow: hidden; background: white;";
+
+    const container = document.createElement("div");
+    container.style = "width: 1100px; padding: 50px; background: white; box-sizing: border-box;"; // 50px gutter
+    container.innerHTML = `
+      <div id="certContainer_${debateId}" style="width: 1000px; height: 650px; background: #ffffff; padding: 30px; box-sizing: border-box; font-family: serif; color: #1a1a1a; border: 10px double #b08d57;">
+        <div style="width: 100%; height: 100%; box-sizing: border-box; padding: 30px; text-align: center; background: #fffcf5; border: 1px solid #b08d57;">
+          <div style="font-size: 18px; color: #b08d57; letter-spacing: 4px; text-transform: uppercase;">Official Academic Recognition</div>
+          <h1 style="font-size: 55px; margin: 5px 0; font-family: 'Georgia', serif;">Certificate of Excellence</h1>
+          <div style="width: 200px; height: 2px; background: #b08d57; margin: 15px auto;"></div>
+          <p style="font-size: 18px; font-style: italic; margin: 10px 0;">This proudly certifies that</p>
+          <h2 style="font-size: 44px; font-weight: bold; margin: 5px 0; color: #7c3aed;">${userName}</h2>
+          <p style="font-size: 16px; color: #444; max-width: 800px; margin: 15px auto; line-height: 1.4;">
+            Has demonstrated exceptional analytical rigor and academic integrity in the tournament:
+          </p>
+          <h3 style="font-size: 24px; font-weight: bold; margin: 5px 0;">"${title}"</h3>
+          <div style="margin: 20px 0;">
+            <span style="font-size: 22px; font-weight: bold; color: #b08d57; border: 2px solid #b08d57; padding: 8px 25px;">SCORE: ${score} / 100</span>
+          </div>
+          <div style="margin-top: 30px; display: flex; justify-content: space-around; align-items: flex-end;">
+            <div style="text-align: center; width: 250px;"><div style="border-bottom: 1px solid #000; margin-bottom: 5px;"></div><div style="font-size: 14px; font-weight: bold;">AI Master Judge</div></div>
+            <div style="width: 80px; height: 80px; border-radius: 50%; border: 3px double #b08d57; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: bold; color: #b08d57;">OFFICIAL SEAL</div>
+            <div style="text-align: center; width: 250px;"><div style="border-bottom: 1px solid #000; margin-bottom: 5px;"></div><div style="font-size: 14px; font-weight: bold;">Date: ${dateStr}</div></div>
+          </div>
+        </div>
+      </div>
+    `;
+    hiddenWrapper.appendChild(container);
+    document.body.appendChild(hiddenWrapper);
+
+    try {
+      const html2pdf = await loadPdfLibrary();
+      await new Promise(r => setTimeout(r, 2000));
+      
+      await html2pdf().set({
+        margin: 0,
+        filename: `Certificate_${userName.replace(/\s+/g, '_')}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { 
+          scale: 2, 
+          useCORS: true, 
+          logging: false,
+          x: 0,
+          y: 0,
+          scrollY: 0,
+          scrollX: 0,
+          windowWidth: 1200 
+        },
+        jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' },
+        pagebreak: { mode: 'avoid-all' }
+      }).from(container).save();
+      
+      UI.toast("Success", "Certificate downloaded!");
+    } catch (err) {
+      UI.toast("Error", "Failed: " + err.message);
+    } finally {
+      document.body.removeChild(hiddenWrapper);
+      document.body.removeChild(overlay);
+    }
+  };  function renderTimeline(debate) {
     const isApproved = debate.approved;
+    const userId = API.state.user ? String(API.state.user._id || API.state.user.id) : null;
+    const isCreator = userId && debate.createdBy && (String(debate.createdBy) === userId || String(debate.createdBy._id) === userId);
     const submittedTime = new Date(debate.createdAt).getTime();
     const now = Date.now();
     const ageHours = (now - submittedTime) / (1000 * 60 * 60);
 
-    // Determine stages
+    if (!isCreator) {
+      // Participation Timeline
+      const isCompleted = debate.status === 'completed';
+      let myRankStr = "";
+      let myRanking = null;
+      if (isCompleted && debate.rankings) {
+        myRanking = debate.rankings.find(r => 
+          String(r.user) === userId || 
+          (r.user && String(r.user._id) === userId)
+        );
+        if (myRanking) myRankStr = `You ranked #${myRanking.rank} with ${myRanking.score} points.`;
+      }
+
+      return `
+        <div class="card pad" style="animation: fadeInUp 0.4s ease-out forwards; border: 1px solid rgba(124, 58, 237, 0.2);">
+          <div class="row">
+            <div>
+              <h3 style="margin:0 0 4px 0">${debate.title}</h3>
+              <div class="muted2" style="font-size:12px;">Active Tournament Participation</div>
+            </div>
+            <div class="spacer"></div>
+            <span class="badge ${isCompleted ? 'good' : 'accent1'}">${isCompleted ? 'Completed' : 'Live Round'}</span>
+          </div>
+          
+          <div class="timeline">
+            <div class="timeline-item done active">
+              <div class="timeline-content">
+                <div class="timeline-title">Participated</div>
+                <div class="timeline-desc">You successfully submitted your argument to this tournament.</div>
+              </div>
+            </div>
+            <div class="timeline-item ${isCompleted ? 'done active' : ''}">
+              <div class="timeline-content">
+                <div class="timeline-title">Graded by AI Master Judge</div>
+                <div class="timeline-desc">${isCompleted ? (myRankStr || 'The AI has ranked all participants.') : (debate.endTime ? 'Waiting for AI evaluation at ' + new Date(debate.endTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Waiting for the round to end for AI evaluation.')}</div>
+                <div style="margin-top:10px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                  <a href="/debate.html?id=${debate._id}" class="btn btn-sm btn-primary">View Debate</a>
+                  ${isCompleted && myRanking && myRanking.rank === 1 ? `<button class="btn btn-sm" style="background: linear-gradient(135deg, #fbbf24, #f59e0b); color: #000; border: none; font-weight: bold; height: 32px;" onclick="window.downloadCertificate('${debate._id}', '${debate.title.replace(/'/g, "\\'")}', ${myRanking.score})">Download Certificate 🏆</button>` : ''}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // Original Approval Timeline (for Creator)
     let stage = 1; // Submitted
     if (ageHours > 0.1) stage = 2; // Transferred to Panel
     if (ageHours > 2 && !isApproved) stage = 3; // AI Verification
@@ -91,57 +272,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     return div.innerHTML;
   }
 
-  async function downloadMatchPdf(match) {
-    // 1. Create a full-screen solid overlay to hide the PDF container from the user
-    const overlay = document.createElement("div");
-    overlay.style = "position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: var(--bg0); z-index: 99999; display: flex; flex-direction: column; align-items: center; justify-content: center;";
-    overlay.innerHTML = `<h2 style="margin-bottom:10px;">Generating Scorecard...</h2><p class="muted">Please wait a moment</p>`;
-    document.body.appendChild(overlay);
-
-    // 2. Create the actual PDF container and append it to the body (underneath the overlay)
-    const container = document.createElement("div");
-    container.style = "position: absolute; top: 0; left: 0; width: 800px; padding: 30px; background: white; color: black; z-index: 99990; font-family: 'Inter', sans-serif;";
-    
-    container.innerHTML = `
-      <h1 style="color: #111; border-bottom: 2px solid #ccc; padding-bottom: 10px;">Academic Debate Scorecard</h1>
-      <p><strong>Mode:</strong> ${match.mode === 'ai' ? 'Player vs AI Robot' : 'Live Student vs Student'}</p>
-      <p><strong>Opponent:</strong> ${escapeHtml(match.opponent)}</p>
-      <p><strong>Date:</strong> ${new Date(match.createdAt).toLocaleString()}</p>
-      
-      <div style="font-size: 48px; font-weight: 900; color: #7c3aed; text-align: center; margin: 20px 0;">${match.score}/100</div>
-      
-      <h3>Judge's Feedback:</h3>
-      <p style="line-height: 1.6; text-align: left;">${escapeHtml(match.feedback)}</p>
-      
-      <h3 style="margin-top:30px;">Transcript:</h3>
-      <div style="text-align: left; font-size: 14px; color: #444; white-space: pre-wrap;">${escapeHtml(match.transcript)}</div>
-    `;
-
-    document.body.appendChild(container);
-
-    try {
-      const pdfGen = await loadPdfLibrary();
-      
-      // WAIT FOR BROWSER TO PAINT DOM! This is the critical fix for the blank PDF issue.
-      await new Promise(resolve => setTimeout(resolve, 200));
-      
-      const opt = {
-        margin:       0.5,
-        filename:     `Scorecard_${match.opponent}_${match.score}.pdf`,
-        image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2, useCORS: true },
-        jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
-      };
-      
-      await pdfGen().set(opt).from(container).save();
-    } catch (err) {
-      UI.toast("Error", "PDF generator could not be loaded.");
-    } finally {
-      if(document.body.contains(container)) document.body.removeChild(container);
-      if(document.body.contains(overlay)) document.body.removeChild(overlay);
-    }
-  }
-
   function showMatchDetails(match) {
     const overlay = document.createElement("div");
     overlay.style = "position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.8); z-index: 99999; display: flex; align-items: center; justify-content: center; padding: 20px;";
@@ -176,71 +306,80 @@ document.addEventListener("DOMContentLoaded", async () => {
     modal.querySelector("#closeModal").addEventListener("click", close);
   }
 
-  try {
-    const data = await API.request("/debates/tracking", { auth: true });
-    const debates = data.debates || [];
-    
-    trackingMount.innerHTML = "";
-    if (debates.length === 0) {
-      trackingMount.innerHTML = `
-        <div class="card pad" style="text-align:center;">
-          <h3 class="muted">No debates submitted yet.</h3>
-          <p class="muted2">Create a debate from the Home page to track its progress here.</p>
-        </div>`;
-    } else {
-      debates.forEach(d => {
-        trackingMount.insertAdjacentHTML("beforeend", renderTimeline(d));
-      });
-    }
-
+  async function loadData() {
     try {
-      const histData = await API.request("/ai/history", { auth: true });
-      const matches = histData.matches || [];
-      document.getElementById("historyCount").textContent = matches.length;
+      // Parallel fetch for both endpoints
+      const [trackRes, historyRes] = await Promise.allSettled([
+        API.request(`/debates/tracking?t=${Date.now()}`, { auth: true }),
+        API.request("/ai/history", { auth: true })
+      ]);
 
-      if (matches.length === 0) {
-        historyMount.innerHTML = `<div class="muted" style="text-align:center; padding: 20px;">No matches played yet. Head over to the Play Arena!</div>`;
+      // 1. Handle Debates Tracking
+      trackingMount.innerHTML = "";
+      if (trackRes.status === "fulfilled") {
+        const debates = trackRes.value.debates || [];
+        if (debates.length === 0) {
+          trackingMount.innerHTML = `
+            <div style="text-align:center; padding: 40px 20px;">
+              <div style="font-size: 40px; margin-bottom: 16px;">🔍</div>
+              <h3 class="muted" style="margin-bottom: 8px;">No debates found.</h3>
+              <p class="muted2" style="font-size: 14px;">Try participating in a debate first!</p>
+              <a href="/all-debates.html" class="btn btn-sm btn-primary" style="margin-top: 16px; display: inline-block;">View All Debates</a>
+            </div>`;
+        } else {
+          debates.forEach(d => {
+            trackingMount.insertAdjacentHTML("beforeend", renderTimeline(d));
+          });
+        }
       } else {
-        historyMount.innerHTML = "";
-        matches.forEach(m => {
-          const div = document.createElement("div");
-          div.className = "row";
-          div.style = "padding: 16px; border: 1px solid var(--border); border-radius: 12px; background: var(--bg0);";
-          
-          const icon = m.mode === "ai" ? "🤖" : "👤";
-          const date = new Date(m.createdAt).toLocaleString(undefined, { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-          const scoreColor = m.score >= 80 ? "var(--good)" : (m.score >= 50 ? "var(--warn)" : "var(--danger)");
-
-          div.innerHTML = `
-            <div style="font-size: 24px; margin-right: 16px;">${icon}</div>
-            <div style="flex-grow: 1; cursor: pointer;" class="view-details-area">
-              <div style="font-weight: bold; font-size: 16px;">vs ${escapeHtml(m.opponent)}</div>
-              <div class="muted" style="font-size: 13px;">${date} • Score: <span style="color: ${scoreColor}; font-weight: bold;">${m.score}/100</span></div>
-            </div>
-            <button class="btn btn-sm btn-ghost view-btn" style="margin-right: 8px;">View Details</button>
-            <button class="btn btn-sm btn-secondary dl-pdf-btn">Download PDF</button>
-          `;
-
-          div.querySelector(".dl-pdf-btn").addEventListener("click", (e) => {
-            e.stopPropagation();
-            downloadMatchPdf(m);
-          });
-          div.querySelector(".view-btn").addEventListener("click", (e) => {
-            e.stopPropagation();
-            showMatchDetails(m);
-          });
-          div.querySelector(".view-details-area").addEventListener("click", () => {
-            showMatchDetails(m);
-          });
-
-          historyMount.appendChild(div);
-        });
+        trackingMount.innerHTML = `<div class="muted" style="padding:20px; text-align:center;">Failed to load tracking data.</div>`;
       }
+
+      // 2. Handle Match History
+      historyMount.innerHTML = "";
+      if (historyRes.status === "fulfilled") {
+        const matches = historyRes.value.matches || [];
+        document.getElementById("historyCount").textContent = matches.length;
+
+        if (matches.length === 0) {
+          historyMount.innerHTML = `<div class="muted" style="text-align:center; padding: 20px;">No matches played yet.</div>`;
+        } else {
+          matches.forEach(m => {
+            const div = document.createElement("div");
+            div.className = "row";
+            div.style = "padding: 16px; border: 1px solid var(--border); border-radius: 12px; background: var(--bg0);";
+            const icon = m.mode === "ai" ? "🤖" : "👤";
+            const date = new Date(m.createdAt).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+            const scoreColor = m.score >= 80 ? "var(--good)" : (m.score >= 50 ? "var(--warn)" : "var(--danger)");
+            
+            div.innerHTML = `
+              <div style="font-size: 24px; margin-right: 16px;">${icon}</div>
+              <div style="flex-grow: 1; cursor: pointer;" class="details-trigger">
+                <div style="font-weight: bold; font-size: 16px;">vs ${escapeHtml(m.opponent)}</div>
+                <div class="muted" style="font-size: 13px;">${date} • Score: <span style="color: ${scoreColor}; font-weight: bold;">${m.score}/100</span></div>
+              </div>
+              <button class="btn btn-sm btn-ghost details-btn">Details</button>
+            `;
+
+            div.querySelector(".details-trigger").onclick = () => showMatchDetails(m);
+            div.querySelector(".details-btn").onclick = () => showMatchDetails(m);
+
+            historyMount.appendChild(div);
+          });
+        }
+      } else {
+        historyMount.innerHTML = `<div class="muted" style="padding:20px; text-align:center;">Failed to load match history.</div>`;
+      }
+
     } catch (err) {
       console.error(err);
-      historyMount.innerHTML = `<div class="muted">Failed to load history.</div>`;
+      UI.toast("Error", "Something went wrong while loading data.");
     }
-  } catch (err) {
-    trackingMount.innerHTML = `<div class="muted">Failed to load tracking data: ${err.message}</div>`;
   }
+
+  // Global helpers for onclick
+  window.showMatchDetails = showMatchDetails;
+  window.downloadMatchPdf = downloadMatchPdf;
+
+  await loadData();
 });

@@ -27,13 +27,18 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.getElementById("name").textContent = u.name;
     document.getElementById("meta").textContent = `${u.email} • joined ${UI.fmtDate(u.createdAt)}`;
     document.getElementById("bioDisplay").textContent = u.bio || "No bio provided.";
-    document.getElementById("repBadge").textContent = `rep ${Number(u.reputation || 0)}`;
+    document.getElementById("repBadge").textContent = `rep ${Math.max(0, Number(u.reputation || 0))}`;
     document.getElementById("roleBadge").textContent = u.role;
     document.getElementById("profileAvatar").textContent = (u.name || "U").charAt(0).toUpperCase();
 
 
 
     document.getElementById("argCount").textContent = `${Number(part.argumentsCount || 0)} args`;
+    
+    if (u.role === "admin" || u.role === "moderator") {
+      document.getElementById("participationSection").style.display = "none";
+    }
+
     const debates = part.debates || [];
     partMount.innerHTML = "";
     if (debates.length === 0) partMount.innerHTML = `<div class="muted">No participation yet. Join a debate from the homepage.</div>`;

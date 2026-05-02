@@ -22,18 +22,28 @@ const API = (() => {
     const headers = { "Content-Type": "application/json" };
     if (auth && state.token) headers.Authorization = `Bearer ${state.token}`;
 
-    const res = await fetch(path.startsWith("/api") ? path : `/api${path}`, {
-      method,
-      headers,
-      body: body ? JSON.stringify(body) : undefined,
-    });
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
 
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) {
-      const msg = data.error || data.message || `Request failed (${res.status})`;
-      throw new Error(msg);
+    try {
+      const res = await fetch(path.startsWith("/api") ? path : `/api${path}`, {
+        method,
+        headers,
+        body: body ? JSON.stringify(body) : undefined,
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const msg = data.error || data.message || `Request failed (${res.status})`;
+        throw new Error(msg);
+      }
+      return data;
+    } catch (err) {
+      if (err.name === 'AbortError') throw new Error('Request timed out');
+      throw err;
     }
-    return data;
   }
 
   return {

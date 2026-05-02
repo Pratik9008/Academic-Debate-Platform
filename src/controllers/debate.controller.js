@@ -20,7 +20,7 @@ async function listDebates(req, res) {
   const debates = await Debate.find(filter)
     .populate("createdBy", "name role reputation")
     .sort({ createdAt: -1 })
-    .limit(50);
+    .limit(200);
 
   return res.json({ debates });
 }
@@ -31,8 +31,35 @@ async function listPendingDebates(req, res) {
 }
 
 async function tracking(req, res) {
-  const debates = await Debate.find({ createdBy: req.user._id }).sort({ createdAt: -1 });
-  return res.json({ debates });
+  console.log(`[TRACKING] Fetching data for user: ${req.user._id} (${req.user.name})`);
+  try {
+    const userId = req.user._id;
+
+    // Fetch created debates
+    const createdDebates = await Debate.find({ createdBy: userId })
+      .sort({ createdAt: -1 })
+      .lean();
+    console.log(`[TRACKING] Found ${createdDebates.length} created debates`);
+
+    // Fetch participation IDs
+    const userArgs = await Argument.find({ author: userId }).distinct("debate");
+    console.log(`[TRACKING] Found ${userArgs.length} distinct debate participations`);
+    
+    // Find participated debates
+    const participatedDebates = await Debate.find({ 
+      _id: { $in: userArgs },
+      createdBy: { $ne: userId }
+    }).sort({ createdAt: -1 }).lean();
+    console.log(`[TRACKING] Found ${participatedDebates.length} participated debates (excluding created)`);
+
+    const debates = [...createdDebates, ...participatedDebates].sort((a, b) => b.createdAt - a.createdAt);
+    
+    console.log(`[TRACKING] Returning ${debates.length} total debates`);
+    return res.json({ debates });
+  } catch (err) {
+    console.error("[TRACKING ERROR]:", err);
+    return res.status(500).json({ error: "Internal server error during tracking" });
+  }
 }
 
 async function createDebate(req, res) {
@@ -71,7 +98,14 @@ async function getDebate(req, res) {
     .sort({ createdAt: 1 })
     .limit(500);
 
-  return res.json({ debate, roundLabel: roundLabel(round), arguments: args });
+  const hasParticipated = req.user ? await Argument.exists({ 
+    debate: debate._id, 
+    author: req.user._id, 
+    round, 
+    deleted: false 
+  }) : false;
+
+  return res.json({ debate, roundLabel: roundLabel(round), arguments: args, hasParticipated: !!hasParticipated });
 }
 
 async function approveDebate(req, res) {

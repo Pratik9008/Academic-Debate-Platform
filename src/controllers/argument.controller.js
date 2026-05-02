@@ -10,6 +10,10 @@ async function postArgument(req, res) {
   const content = requiredString(req.body.content, 4000);
   const parentArgumentId = req.body.parentArgumentId ? requiredString(req.body.parentArgumentId, 80) : null;
 
+  if (req.user.role === "admin" || req.user.role === "moderator") {
+    return res.status(403).json({ message: "Admins and Moderators cannot participate in debates." });
+  }
+
   if (!debateId) return res.status(400).json({ message: "debateId is required" });
   if (!content) return res.status(400).json({ message: "content is required" });
 
@@ -95,6 +99,10 @@ async function replyToArgument(req, res) {
   const argumentId = requiredString(req.body.argumentId, 80);
   const content = requiredString(req.body.content, 2000);
   const parentCommentId = req.body.parentCommentId ? requiredString(req.body.parentCommentId, 80) : null;
+
+  if (req.user.role === "admin" || req.user.role === "moderator") {
+    return res.status(403).json({ message: "Admins and Moderators cannot participate in debates." });
+  }
   if (!argumentId) return res.status(400).json({ message: "argumentId is required" });
   if (!content) return res.status(400).json({ message: "content is required" });
 

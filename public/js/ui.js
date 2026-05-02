@@ -29,7 +29,33 @@ const UI = (() => {
 
   function fmtDate(d) {
     try {
-      return new Date(d).toLocaleString();
+      const date = new Date(d);
+      const now = new Date();
+      const diff = now - date;
+      const day = 24 * 60 * 60 * 1000;
+
+      if (diff < day && now.getDate() === date.getDate()) return `Today, ${date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
+      if (diff < day * 2 && now.getDate() - date.getDate() === 1) return `Yesterday, ${date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
+      
+      return date.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
+    } catch {
+      return "";
+    }
+  }
+
+  function fmtTimeStatus(d, prefix = "Ends") {
+    try {
+      const date = new Date(d);
+      const now = new Date();
+      const diff = date - now;
+      const day = 24 * 60 * 60 * 1000;
+
+      let label = "";
+      if (date.toDateString() === now.toDateString()) label = "Today";
+      else if (new Date(now.getTime() + day).toDateString() === date.toDateString()) label = "Tomorrow";
+      else label = date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+
+      return `${prefix} ${label} at ${date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
     } catch {
       return "";
     }
@@ -65,6 +91,7 @@ const UI = (() => {
 
     const user = API.state.user;
     const role = user?.role || "guest";
+    const isAuthPage = location.pathname === "/" || location.pathname.includes("login.html") || location.pathname.includes("signup.html");
 
     root.innerHTML = "";
     root.appendChild(
@@ -82,21 +109,26 @@ const UI = (() => {
           <div class="spacer"></div>
 
           <div class="nav-right">
+            ${!isAuthPage ? `
             <div class="nav-links">
+              <a class="pill ${active === "all-debates" ? "active" : ""}" href="/all-debates.html">All Debates 🔎</a>
               ${(role === "user" || role === "guest") ? `
                 <a class="pill ${active === "play" ? "active" : ""}" href="/play.html">Play Arena 🎮</a>
                 <a class="pill" href="/live-debate.html" style="color: #ef4444; font-weight: bold;">🔴 Live Match</a>
+                <a class="pill ${active === "tracking" ? "active" : ""}" href="/track-status.html">Track Status</a>
               ` : ""}
               <a class="pill ${active === "leaderboard" ? "active" : ""}" href="/leaderboard.html">Leaderboard 🏆</a>
-              ${role === "user" ? `<a class="pill ${active === "tracking" ? "active" : ""}" href="/tracking.html">Track Status</a>` : ""}
               ${(role === "moderator" || role === "admin") ? `<a class="pill ${active === "mod" ? "active" : ""}" href="/admin.html">Admin Portal</a>` : ""}
             </div>
+            ` : ""}
 
             <div class="nav-actions">
               <button class="pill" id="themeBtn" title="Toggle theme" type="button" style="padding: 6px 12px; font-size: 16px;">🌗</button>
+              ${!isAuthPage ? `
               <a class="pill" href="/notifications.html" id="notifBtn" title="Notifications" style="padding: 6px 12px; font-size: 16px; position:relative;">
                 🔔 <span class="badge" id="notifBadge" style="position:absolute; top:-4px; right:-8px; display:none;">0</span>
               </a>
+              ` : ""}
               ${
                 user
                   ? `<div class="profile-menu-container" style="position:relative;">
@@ -106,7 +138,7 @@ const UI = (() => {
                        <div class="profile-dropdown" id="profileDropdown" style="display:none;">
                          <div class="dropdown-header">
                            <strong>${user.name || "User"}</strong>
-                           <span class="muted2" style="display:block;font-size:12px;margin-top:2px;">Rep: ${user.reputation || 0}</span>
+                           <span class="muted2" style="display:block;font-size:12px;margin-top:2px;">Rep: ${Math.max(0, user.reputation || 0)}</span>
                          </div>
                          <a href="/profile.html" class="dropdown-item">👤 My Profile</a>
                          <a href="/settings.html" class="dropdown-item">⚙️ Settings</a>
@@ -114,7 +146,7 @@ const UI = (() => {
                          <button id="logoutBtn" class="dropdown-item danger-text" style="width:100%;text-align:left;border:none;background:none;font-size:14px;cursor:pointer;">🚪 Logout</button>
                        </div>
                      </div>`
-                  : `<a class="pill primary" href="/login.html">Login</a>`
+                  : (!location.pathname.includes("login.html") && location.pathname !== "/") ? `<a class="pill primary" href="/login.html">Login</a>` : ""
               }
             </div>
           </div>
@@ -165,10 +197,24 @@ const UI = (() => {
     return Object.fromEntries(params.entries());
   }
 
+  document.addEventListener("mousemove", (e) => {
+    document.body.style.setProperty("--mouse-x-global", `${e.clientX}px`);
+    document.body.style.setProperty("--mouse-y-global", `${e.clientY}px`);
+    
+    document.querySelectorAll('.auth-card, .card.hover').forEach(card => {
+      const rect = card.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      card.style.setProperty("--mouse-x", `${x}px`);
+      card.style.setProperty("--mouse-y", `${y}px`);
+    });
+  });
+
   return {
     el,
     toast,
     fmtDate,
+    fmtTimeStatus,
     initTheme,
     mountNavbar,
     mustAuth,

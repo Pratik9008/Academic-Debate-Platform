@@ -16,8 +16,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     const heroActions = document.querySelector(".hero-actions");
     if (heroActions) {
       heroActions.innerHTML = `
-        <a class="btn btn-primary" href="/admin.html">View Activity on Admin Portal ➡️</a>
-        <div class="kbd">Manage users, view AI/Live matches, and approve debates</div>
+        <a href="/admin.html" class="btn btn-primary" style="text-decoration:none;">
+          View Activity on Admin Portal ➡️
+        </a>
+        <a href="/admin.html" class="kbd hover-bright" style="text-decoration:none; cursor:pointer;">
+          Manage users, view AI/Live matches, and approve debates
+        </a>
       `;
     }
   }
@@ -25,9 +29,12 @@ document.addEventListener("DOMContentLoaded", async () => {
   function debateCard(d) {
     let timeStatus = "";
     if (d.status === "active" && d.endTime) {
-      timeStatus = `<div class="badge danger">Closes at ${new Date(d.endTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>`;
+      timeStatus = `<div class="badge danger">${UI.fmtTimeStatus(d.endTime, "Closes")}</div>`;
+      if (d.participants && API.state.user && d.participants.some(p => String(p) === String(API.state.user._id) || (p._id && String(p._id) === String(API.state.user._id)))) {
+        timeStatus += `<div class="badge good" style="margin-left: 8px;">✅ Participated</div>`;
+      }
     } else if (d.status === "upcoming" && d.startTime) {
-      timeStatus = `<div class="badge warn">Starts at ${new Date(d.startTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>`;
+      timeStatus = `<div class="badge warn">${UI.fmtTimeStatus(d.startTime, "Starts")}</div>`;
     } else if (d.status === "completed") {
       let myRank = null;
       if (d.rankings && API.state.user) {
@@ -59,7 +66,6 @@ document.addEventListener("DOMContentLoaded", async () => {
           </div>
         </div>
         <div class="row" style="margin-top:12px">
-          <div class="muted2" style="font-size:12px">By <strong>${escapeHtml(d.createdBy?.name || "System")}</strong></div>
           <div class="spacer"></div>
           <div class="muted2" style="font-size:12px">${UI.fmtDate(d.createdAt)}</div>
         </div>
@@ -85,33 +91,35 @@ document.addEventListener("DOMContentLoaded", async () => {
       const data = await API.request(`/debates?q=${encodeURIComponent(q)}`, { auth: false });
       const debates = data.debates || [];
       
-      const live = debates.filter(d => d.status === "active");
-      const upcoming = debates.filter(d => d.status === "upcoming" || d.status === "pending");
+      const live = debates.filter(d => d.status === "active").sort((a,b) => new Date(a.endTime||0) - new Date(b.endTime||0));
+      const upcoming = debates.filter(d => d.status === "upcoming" || d.status === "pending").sort((a,b) => new Date(a.startTime||Infinity) - new Date(b.startTime||Infinity));
       
       const completedList = [];
       const endedList = [];
 
       debates.filter(d => d.status === "completed").forEach(d => {
-        const isAdmin = API.state.user && (API.state.user.role === "admin" || API.state.user.role === "moderator");
-        if (isAdmin) {
-          completedList.push(d); // Admin sees everything in one list
-        } else {
-          let isParticipant = false;
-          if (d.rankings && API.state.user) {
-            isParticipant = d.rankings.some(r => 
-              String(r.user) === String(API.state.user._id) || 
-              (r.user && String(r.user._id) === String(API.state.user._id))
-            );
-          }
-          if (isParticipant) completedList.push(d);
-          else endedList.push(d);
+        let isParticipant = false;
+        if (d.rankings && API.state.user) {
+          isParticipant = d.rankings.some(r => 
+            String(r.user) === String(API.state.user._id) || 
+            (r.user && String(r.user._id) === String(API.state.user._id))
+          );
         }
+        if (isParticipant) completedList.push(d);
+        else endedList.push(d);
       });
       
+      // Hide completed section if no participated debates
+      const cTitleRow = document.getElementById("completedTitleRow");
+      if (cTitleRow) {
+        cTitleRow.style.display = completedList.length > 0 ? "flex" : "none";
+      }
+      if (completedMount) {
+        completedMount.style.display = completedList.length > 0 ? "grid" : "none";
+      }
+
       const isAdminView = API.state.user && (API.state.user.role === "admin" || API.state.user.role === "moderator");
       if (isAdminView) {
-        const cTitle = document.getElementById("completedTitle");
-        if(cTitle) cTitle.innerHTML = "🏆 All Completed Debates";
         const eRow = document.getElementById("endedTitleRow");
         if(eRow) eRow.style.display = "none";
         if(endedMount) endedMount.style.display = "none";
@@ -119,13 +127,13 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       if(liveMount) {
         liveMount.innerHTML = "";
-        live.forEach((d) => liveMount.appendChild(debateCard(d)));
+        live.slice(0, 5).forEach((d) => liveMount.appendChild(debateCard(d)));
         if (live.length === 0) liveMount.innerHTML = `<div class="muted">No live debates right now.</div>`;
       }
 
       if(upcomingMount) {
         upcomingMount.innerHTML = "";
-        upcoming.forEach((d) => upcomingMount.appendChild(debateCard(d)));
+        upcoming.slice(0, 5).forEach((d) => upcomingMount.appendChild(debateCard(d)));
         if (upcoming.length === 0) upcomingMount.innerHTML = `<div class="muted">No upcoming debates scheduled.</div>`;
       }
 

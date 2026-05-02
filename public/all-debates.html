@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Archive • Academic Debate</title>
+    <title>All Debates • Academic Debate</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
@@ -19,34 +19,37 @@
       <div class="card pad" style="border-radius:24px">
         <div class="row" style="flex-wrap:wrap;align-items:flex-end">
           <div style="flex:1;min-width:min(500px,92vw)">
-            <div class="tag"><i></i> Completed debates</div>
-            <h2 style="margin:10px 0 0">Archive</h2>
+            <div class="tag"><i></i> Exploration</div>
+            <h2 style="margin:10px 0 0">All Debates</h2>
             <div class="muted" style="margin-top:6px;line-height:1.55">
-              Read-only discussions. Filter by category and date.
+              Browse through all active, upcoming, and completed debates.
             </div>
           </div>
           <div class="row" style="flex-wrap:wrap;justify-content:flex-end">
-            <select class="input" id="cat" style="width:180px">
-              <option value="">All categories</option>
+            <select class="input" id="statusFilter" style="width:180px">
+              <option value="all">All Status</option>
+              <option value="live">🔴 Live</option>
+              <option value="upcoming">⏳ Upcoming</option>
+              <option value="completed">🏆 Ended/Completed</option>
+            </select>
+            <select class="input" id="catFilter" style="width:180px">
+              <option value="">All Categories</option>
               <option>Science</option>
               <option>Tech</option>
               <option>Politics</option>
             </select>
-            <input class="input" id="from" type="date" style="width:160px" />
-            <input class="input" id="to" type="date" style="width:160px" />
-            <button class="btn btn-primary" id="applyBtn">Apply</button>
+            <button class="btn btn-primary" id="applyBtn">Apply Filters</button>
           </div>
         </div>
       </div>
 
       <section class="section">
-        <div class="debate-list" id="archiveMount"></div>
+        <div class="debate-list" id="debatesMount"></div>
       </section>
     </main>
 
     <script src="/js/api.js"></script>
     <script src="/js/ui.js"></script>
-    <script src="/js/pages/archive.js"></script>
+    <script src="/js/pages/all-debates.js"></script>
   </body>
 </html>
-

@@ -7,6 +7,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/css/styles.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
   </head>
   <body>
     <div id="navbarMount"></div>
@@ -16,8 +18,8 @@
       <p class="muted" style="margin-bottom: 24px;">View the approval progress of your submitted debates in real-time.</p>
       
       <div class="card pad" style="border-radius: 24px;">
-      <h2 style="margin: 0 0 20px 0;">Track Pending Debates</h2>
-      <div id="trackingMount"></div>
+      <h2 style="margin: 0 0 20px 0;">Track Your Debates</h2>
+      <div id="trackingMount"><div class="muted" style="text-align:center; padding:20px;">Fetching your debate track...</div></div>
     </div>
 
     <!-- Match History Section -->
@@ -27,7 +29,9 @@
         <div class="spacer"></div>
         <span class="badge" id="historyCount">0</span>
       </div>
-      <div id="historyMount" style="margin-top: 20px; display: flex; flex-direction: column; gap: 16px;"></div>
+      <div id="historyMount" style="margin-top: 20px; display: flex; flex-direction: column; gap: 16px;">
+        <div class="muted" style="text-align:center; padding:20px;">Loading history...</div>
+      </div>
     </div>
   </main>
 

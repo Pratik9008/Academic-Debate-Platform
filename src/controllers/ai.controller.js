@@ -28,6 +28,12 @@ Be extremely helpful, analytical, and concise (max 3 short paragraphs). Provide 
 User: ${message}`;
     } else {
       prompt = `System: You are the AI Assistant for the 'Academic Debate Platform'. This is a premium platform for structured, intellectual debates. 
+PLATFORM MECHANICS:
+- Reputation (Rep) points: Earned (+1) when other users upvote your arguments in Live Tournaments. Downvotes subtract (-1) point.
+- Match Types: Students can participate in "Live Matches" against peers, or "AI Matches" against a robot.
+- Scoring: After a debate, an AI Judge grades the transcript out of 100.
+- Track Status: Students can check their match history, scores, and download PDF certificates on the "Track Status" page.
+- Admins: Admins start with 10,000 Rep and do not participate in debates to maintain tournament integrity.
 IMPORTANT RULES:
 1. You must ONLY answer questions related to the Academic Debate Platform, how to debate, structuring arguments, or using the website.
 2. If the user asks general knowledge questions, coding questions, or anything unrelated to this platform, politely decline and steer them back to debates.
@@ -59,14 +65,27 @@ async function debateBot(req, res) {
     
     // Convert history to string for context
     const context = history.map(h => `${h.role === 'user' ? 'Human' : 'Robot'}: ${h.text}`).join('\n');
-    const prompt = `Context:\n${context}\n\nHuman: ${userMessage}\n\nYou are a highly intellectual debate opponent. Counter the Human's argument concisely (max 3 sentences).`;
+    const prompt = `System: You are a strict Debate Moderator and intellectual opponent.
+First, evaluate the Human's message. If it is nonsense, gibberish, a random sequence of letters (e.g., 'k hb', 'asd'), extremely short, or entirely irrelevant to the debate, you MUST reply with ONLY the exact word "REJECTED_NONSENSE" and absolutely nothing else.
+
+If and ONLY if the Human's message is a valid argument, act as their debate opponent and provide a concise counter-argument (max 3 sentences).
+
+Context of debate so far:
+${context}
+
+Human's new message: "${userMessage}"`;
 
     const chatCompletion = await groq.chat.completions.create({
       messages: [{ role: "user", content: prompt }],
       model: "llama-3.1-8b-instant"
     });
 
-    return res.json({ reply: chatCompletion.choices[0]?.message?.content || "" });
+    const replyText = chatCompletion.choices[0]?.message?.content || "";
+    if (replyText.includes("REJECTED_NONSENSE")) {
+      return res.status(400).json({ error: "Warning: Your argument is invalid, gibberish, or too short. Please provide a clear, reasoned response to continue the debate." });
+    }
+
+    return res.json({ reply: replyText });
   } catch (error) {
     console.error("AI Error:", error);
     const msg = error?.status === 429 ? "AI is cooling down (API Rate Limit Exceeded). Please wait 30 seconds and try again!" : "Bot failed to respond.";
@@ -78,7 +97,20 @@ async function judgeDebate(req, res) {
   const { transcript, mode, opponent } = req.body;
   try {
     const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
-    const prompt = `Read this debate transcript:\n${transcript}\n\nGrade the Human's performance out of 100 based on logic, evidence, and structure. Provide a concise feedback paragraph.\nFormat exactly like this:\nSCORE: 85\nFEEDBACK: Your logic was good but...`;
+    const prompt = `You are a professional Academic Debate Judge. 
+Carefully read and analyze this debate transcript between a Human and an Opponent:
+\n${transcript}\n
+Grade the Human's performance out of 100 based on these STRICT criteria:
+1. Logic & Reasoning (40 pts): Are the arguments consistent, deep, and free of fallacies?
+2. Evidence & Knowledge (30 pts): Did the human use specific examples, facts, or technical details effectively?
+3. Rhetoric & Structure (30 pts): Is the tone professional, and are the rebuttals direct and clear?
+
+Be a tough but fair judge. Do not give high scores for generic or low-effort responses.
+Provide a concise, professional feedback paragraph (max 4 sentences) justifying your score.
+
+Format your response EXACTLY like this:
+SCORE: [Number]
+FEEDBACK: [Your feedback text]`;
     
     const chatCompletion = await groq.chat.completions.create({
       messages: [{ role: "user", content: prompt }],
@@ -108,7 +140,7 @@ async function judgeDebate(req, res) {
       type: "system",
       title: "Debate Scored!",
       body: `You scored ${score}/100 against ${opponent || "AI Robot"}. Check your Match History for the full scorecard and PDF.`,
-      link: "/tracking.html"
+      link: "/track-status.html"
     });
 
     // Notify all admins
@@ -132,10 +164,13 @@ async function judgeDebate(req, res) {
 }
 
 async function getHistory(req, res) {
+  console.log(`[HISTORY] Fetching matches for user: ${req.user._id}`);
   try {
-    const matches = await Match.find({ userId: req.user._id }).sort({ createdAt: -1 });
+    const matches = await Match.find({ userId: req.user._id }).sort({ createdAt: -1 }).lean();
+    console.log(`[HISTORY] Found ${matches.length} matches`);
     return res.json({ matches });
   } catch (err) {
+    console.error("[HISTORY ERROR]:", err);
     return res.status(500).json({ error: "Failed to fetch history" });
   }
 }

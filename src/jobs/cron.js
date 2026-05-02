@@ -8,7 +8,7 @@ const Groq = require('groq-sdk');
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
-async function generateEngineeringDebates(count = 50, isDemo = false) {
+async function generateEngineeringDebates(count = 5, isDemo = false, startFrom = new Date(), status = "upcoming") {
   try {
     console.log(`[Cron] Generating ${count} ${isDemo ? 'DEMO ' : ''}Engineering debates...`);
     const admin = await User.findOne({ role: { $in: ['admin', 'moderator'] } });
@@ -17,12 +17,28 @@ async function generateEngineeringDebates(count = 50, isDemo = false) {
       return false;
     }
 
+    const techAreas = [
+      "Web Development and Frontend Frameworks",
+      "Backend Architectures and Microservices",
+      "Cloud Computing, AWS, and DevOps",
+      "Artificial Intelligence, LLMs, and Machine Learning",
+      "Cybersecurity, Encryption, and Web Security",
+      "Database Systems, SQL, and Data Engineering",
+      "Mobile App Development (React Native, Flutter, Swift)",
+      "Software Engineering Practices, Testing, and Agile",
+      "Internet of Things (IoT) and Edge Computing",
+      "Blockchain, Web3, and Decentralized Systems",
+      "Operating Systems and Low-Level Programming",
+      "System Design, Scalability, and Performance"
+    ];
+    const randomArea = techAreas[Math.floor(Math.random() * techAreas.length)];
+
     const prompt = `You are a curriculum director for a Computer Engineering degree. Generate exactly ${count} highly technical debate topics. 
-The topics MUST strictly relate to Computer Engineering, Web Development, Full-Stack, Software Architecture, AI/ML, or Tech Stacks (e.g. React vs Angular, SQL vs NoSQL, Microservices vs Monolith).
+Focus SPECIFICALLY on this sub-field: ${randomArea}. Ensure the topics are very unique, specific, and not generic.
 You must respond with ONLY a valid JSON array of objects. Do not include any other text or markdown formatting.
 Each object must have these exact keys: 
 "title" (string, max 100 chars), 
-"description" (string, detailed background), 
+"description" (string, detailed background of the engineering tradeoff), 
 "category" (string, strictly "Tech"),
 "durationMinutes" (number, between 5 and 120). Assign based on topic complexity: Simple topics (5-15 min), Medium topics (15-45 min), Complex topics (45-120 min).`;
 
@@ -51,22 +67,18 @@ Each object must have these exact keys:
     
     if (!Array.isArray(debatesJSON)) debatesJSON = [debatesJSON];
     
-    let baseTime = new Date();
-    
     for (const [index, d] of debatesJSON.entries()) {
-      let startTime = new Date(baseTime);
-      let endTime = new Date(baseTime);
+      let startTime = new Date(startFrom);
+      let endTime = new Date(startFrom);
 
       if (isDemo) {
         // Demo mode: cascade them closely. First one starts now, next starts in 5 mins
         startTime.setMinutes(startTime.getMinutes() + (index * 2)); // cascade start
         endTime = new Date(startTime.getTime() + (5 * 60000)); // All demos last 5 mins
       } else {
-        // Daily mode: Spread 50 debates from NOW onwards (for today)
-        // Start from current time to ensure debates are "live" right now
-        const minutesPerDebate = (24 * 60) / 50; // ~28.8 minutes per debate
+        // Hourly mode: Spread debates over 60 minutes
+        const minutesPerDebate = 60 / count;
         const offsetMinutes = index * minutesPerDebate;
-        startTime = new Date(baseTime);
         startTime.setMinutes(startTime.getMinutes() + Math.floor(offsetMinutes));
         startTime.setSeconds(0);
         
@@ -80,7 +92,7 @@ Each object must have these exact keys:
         category: "Tech",
         createdBy: admin._id,
         approved: true,
-        status: "active", // All debates start as active immediately
+        status: status,
         startTime,
         endTime,
         round: 1,
@@ -97,170 +109,54 @@ Each object must have these exact keys:
 }
 
 function initCronJobs() {
-  // Initialize on startup - generate today and tomorrow debates
+  // Initialize on startup - generate current hour and next hour debates
   (async () => {
     try {
       console.log('[Cron] Startup: Checking debates...');
       
-      // Clear all old debates first
-      await Debate.deleteMany({});
-      console.log('[Cron] Cleared all old debates.');
+      // Check if we need to generate initial buffer
+      const existingDebates = await Debate.countDocuments({ status: { $in: ['upcoming', 'active'] } });
+      if (existingDebates === 0) {
+        console.log('[Cron] No active/upcoming debates found. Generating startup buffer (Current hour + Next 3 hours)...');
+        const now = new Date();
+      for (let i = 0; i < 4; i++) {
+        const targetHour = new Date(now);
+        targetHour.setHours(now.getHours() + i);
+        targetHour.setMinutes(0, 0, 0);
+        await generateEngineeringDebates(5, false, targetHour, "upcoming");
+        // Sleep 4 seconds between calls to avoid hitting Groq API rate limits
+        await new Promise(r => setTimeout(r, 4000));
+      }
+      console.log('[Cron] Startup buffer generated successfully.');
       
-      // Generate today's 50 active debates
-      console.log('[Cron] Generating 50 active debates for today...');
-      await generateEngineeringDebates(50, false);
-      
-      // Generate tomorrow's 50 upcoming debates
-      console.log('[Cron] Generating 50 upcoming debates for tomorrow...');
-      try {
-        const tomorrowStart = new Date();
-        tomorrowStart.setDate(tomorrowStart.getDate() + 1);
-        tomorrowStart.setHours(0, 0, 0, 0); // Tomorrow at midnight
-        
-        const admin = await User.findOne({ role: { $in: ['admin', 'moderator'] } });
-        if (!admin) {
-          console.log('[Cron] Error: No admin found.');
-          return;
-        }
-
-        const prompt = `You are a curriculum director for a Computer Engineering degree. Generate exactly 50 highly technical debate topics. 
-The topics MUST strictly relate to Computer Engineering, Web Development, Full-Stack, Software Architecture, AI/ML, or Tech Stacks.
-You must respond with ONLY a valid JSON array. Do not include markdown or any other text.
-Each object must have: "title" (max 100 chars), "description", "category" ("Tech"), "durationMinutes" (5-120).`;
-
-        const chatCompletion = await groq.chat.completions.create({
-          model: 'llama-3.1-8b-instant',
-          messages: [{ role: 'user', content: prompt }],
-          temperature: 0.7
-        });
-
-        let aiResponse = chatCompletion.choices[0]?.message?.content || "[]";
-        if (aiResponse.startsWith("```")) aiResponse = aiResponse.replace(/```json/g, "").replace(/```/g, "").trim();
-
-        let debatesJSON = [];
-        try {
-          debatesJSON = JSON.parse(aiResponse);
-        } catch (parseErr) {
-          console.warn('[Cron] Tomorrow JSON parse failed, using mock debates:', parseErr.message);
-          debatesJSON = Array.from({ length: 50 }).map((_, i) => ({
-            title: `Tech Debate Tomorrow ${i + 1}`,
-            description: `Technical debate about modern software practices.`,
-            category: "Tech",
-            durationMinutes: 20 + Math.random() * 60
-          }));
-        }
-        
-        if (!Array.isArray(debatesJSON)) debatesJSON = [debatesJSON];
-        
-        for (const [index, d] of debatesJSON.entries()) {
-          const minutesPerDebate = (24 * 60) / 50;
-          const offsetMinutes = index * minutesPerDebate;
-          let startTime = new Date(tomorrowStart);
-          startTime.setMinutes(Math.floor(offsetMinutes));
-          startTime.setSeconds(0);
-          const durationMs = (d.durationMinutes || 30) * 60000;
-          let endTime = new Date(startTime.getTime() + durationMs);
-
-          await Debate.create({
-            title: d.title.substring(0, 140),
-            description: d.description.substring(0, 2000),
-            category: "Tech",
-            createdBy: admin._id,
-            approved: true,
-            status: "upcoming",
-            startTime,
-            endTime,
-            round: 1,
-            roundState: "open"
-          });
-        }
-        
-        console.log('[Cron] Successfully created 50 debates for tomorrow (upcoming).');
-      } catch (err) {
-        console.error('[Cron] Error generating tomorrow debates:', err.message);
       }
     } catch (err) {
       console.error('[Cron] Init failed:', err.message);
     }
   })();
 
-  // 1. Midnight Auto-Generator (00:00 every day)
+  // 1. Midnight Auto-Generator (00:00 every day) schedules the ENTIRE 24 hours
   cron.schedule('0 0 * * *', async () => {
-    console.log('[Cron] Midnight schedule triggered. Generating daily debates...');
-    // Close all active/upcoming from previous day
-    await Debate.updateMany({ status: { $in: ['active', 'upcoming'] } }, { status: 'completed' });
+    console.log('[Cron] Midnight schedule triggered. Generating 24-hour schedule...');
     
-    // Generate today's 50 debates (starting from midnight - they'll be active immediately)
-    await generateEngineeringDebates(50, false);
+    // Close active debates from the previous day
+    await Debate.updateMany({ status: 'active' }, { status: 'completed' });
     
-    // Generate tomorrow's 50 debates as upcoming (starting from next day midnight)
-    try {
-      const nextDayMidnight = new Date();
-      nextDayMidnight.setDate(nextDayMidnight.getDate() + 1);
-      nextDayMidnight.setHours(0, 0, 0, 0); // Next day at midnight
+    const todayMidnight = new Date();
+    todayMidnight.setHours(0, 0, 0, 0);
+
+    // Loop through all 24 hours of the day
+    for (let hour = 0; hour < 24; hour++) {
+      const targetHour = new Date(todayMidnight);
+      targetHour.setHours(hour);
       
-      const admin = await User.findOne({ role: { $in: ['admin', 'moderator'] } });
-      if (!admin) {
-        console.log('[Cron] Error: No admin found for next day debates.');
-        return;
-      }
-
-      const prompt = `You are a curriculum director for a Computer Engineering degree. Generate exactly 50 highly technical debate topics. 
-The topics MUST strictly relate to Computer Engineering, Web Development, Full-Stack, Software Architecture, AI/ML, or Tech Stacks.
-You must respond with ONLY a valid JSON array. Do not include markdown or any other text.
-Each object must have: "title" (max 100 chars), "description", "category" ("Tech"), "durationMinutes" (5-120).`;
-
-      const chatCompletion = await groq.chat.completions.create({
-        model: 'llama-3.1-8b-instant',
-        messages: [{ role: 'user', content: prompt }],
-        temperature: 0.7
-      });
-
-      let aiResponse = chatCompletion.choices[0]?.message?.content || "[]";
-      if (aiResponse.startsWith("```")) aiResponse = aiResponse.replace(/```json/g, "").replace(/```/g, "").trim();
-
-      let debatesJSON = [];
-      try {
-        debatesJSON = JSON.parse(aiResponse);
-      } catch (parseErr) {
-        console.warn('[Cron] Midnight JSON parse failed, using mock debates:', parseErr.message);
-        debatesJSON = Array.from({ length: 50 }).map((_, i) => ({
-          title: `Tech Debate ${i + 1}`,
-          description: `Technical debate about modern software practices.`,
-          category: "Tech",
-          durationMinutes: 20 + Math.random() * 60
-        }));
-      }
+      // Generate 5 debates for this specific hour
+      await generateEngineeringDebates(5, false, targetHour, "upcoming");
       
-      if (!Array.isArray(debatesJSON)) debatesJSON = [debatesJSON];
-      
-      for (const [index, d] of debatesJSON.entries()) {
-        const minutesPerDebate = (24 * 60) / 50;
-        const offsetMinutes = index * minutesPerDebate;
-        let startTime = new Date(nextDayMidnight);
-        startTime.setMinutes(Math.floor(offsetMinutes));
-        startTime.setSeconds(0);
-        const durationMs = (d.durationMinutes || 30) * 60000;
-        let endTime = new Date(startTime.getTime() + durationMs);
-
-        await Debate.create({
-          title: d.title.substring(0, 140),
-          description: d.description.substring(0, 2000),
-          category: "Tech",
-          createdBy: admin._id,
-          approved: true,
-          status: "upcoming",
-          startTime,
-          endTime,
-          round: 1,
-          roundState: "open"
-        });
-      }
-      
-      console.log('[Cron] Successfully created 50 debates for next day.');
-    } catch (err) {
-      console.error('[Cron] Error generating next day debates:', err.message);
+      // Sleep for 8 seconds between each hour to completely avoid API token/rate limits
+      await new Promise(r => setTimeout(r, 8000));
     }
+    console.log('[Cron] Successfully generated schedule for all 24 hours of the day.');
   });
 
   // 2. Every Minute Engine (Checks Starts, Ends, and Triggers Grading)

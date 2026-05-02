@@ -28,8 +28,7 @@
               </p>
               <div class="hero-actions">
                 <button class="btn btn-primary" id="createDebateBtn">Join Debate</button>
-                <a class="btn btn-ghost" href="/archive.html">Browse archive</a>
-                <div class="kbd">Tip: search and press Enter</div>
+                <a class="btn btn-ghost" href="/all-debates.html">Browse debates</a>
               </div>
             </div>
             <div class="card pad" style="width:min(380px,92vw);border-radius:22px">
@@ -39,10 +38,12 @@
               </div>
               <div style="margin-top:12px" class="form-grid">
                 <input class="input" id="searchInput" placeholder="Search debates (e.g. quantum, AI regulation…)" />
-                <div class="row">
-                  <span class="tag"><i></i> Science</span>
-                  <span class="tag"><i></i> Tech</span>
-                  <span class="tag"><i></i> Politics</span>
+                <div class="row" style="justify-content: space-between;">
+                  <div class="row">
+                    <span class="tag" style="cursor:pointer;" onclick="document.getElementById('searchInput').value='Science';"><i></i> Science</span>
+                    <span class="tag" style="cursor:pointer;" onclick="document.getElementById('searchInput').value='Tech';"><i></i> Tech</span>
+                  </div>
+                  <div class="kbd" style="font-size:11px;">Press Enter ↵</div>
                 </div>
               </div>
             </div>
@@ -55,23 +56,27 @@
       <section class="section">
         <div class="row">
           <h2 style="margin:0; color: var(--danger);">🔴 Live Debates</h2>
+          <div class="spacer"></div>
+          <a class="pill" href="/all-debates.html?filter=live">View all</a>
         </div>
         <div class="debate-list" id="liveMount" style="margin-top:12px"></div>
 
         <div class="row" style="margin-top: 40px;">
           <h2 style="margin:0; color: var(--warn);">⏳ Upcoming Debates</h2>
+          <div class="spacer"></div>
+          <a class="pill" href="/all-debates.html?filter=upcoming">View all</a>
         </div>
         <div class="debate-list" id="upcomingMount" style="margin-top:12px"></div>
 
         <div class="row" style="margin-top: 40px;" id="completedTitleRow">
-          <h2 style="margin:0; color: var(--good);" id="completedTitle">🏆 Completed (Your Ranks)</h2>
+          <h2 style="margin:0; color: var(--good);" id="completedTitle">🏆 Completed Debates</h2>
         </div>
         <div class="debate-list" id="completedMount" style="margin-top:12px"></div>
 
         <div class="row" style="margin-top: 40px;" id="endedTitleRow">
           <h2 style="margin:0; color: var(--muted);">🕒 Ended (Missed)</h2>
           <div class="spacer"></div>
-          <a class="pill" href="/archive.html">View all</a>
+          <a class="pill" href="/all-debates.html?filter=ended">View all</a>
         </div>
         <div class="debate-list" id="endedMount" style="margin-top:12px"></div>
       </section>

@@ -106,11 +106,24 @@ document.addEventListener("DOMContentLoaded", async () => {
         const tr = document.createElement("tr");
         const statusBadge = d.approved ? '<span class="badge" style="background:var(--good);color:#000;">Approved</span>' : '<span class="badge" style="background:var(--warn);color:#000;">Pending</span>';
         
+        let phaseBadge = '';
+        if (d.status === 'active') phaseBadge = '<span class="badge" style="background:var(--accent1);color:#fff;border:none;">Active</span>';
+        else if (d.status === 'upcoming') phaseBadge = '<span class="badge" style="background:var(--warn);color:#000;border:none;">Upcoming</span>';
+        else phaseBadge = '<span class="badge" style="background:var(--border);color:#fff;border:none;">Completed</span>';
+
+        let timingHtml = '<span class="muted" style="font-size:12px;">Not scheduled</span>';
+        if (d.startTime && d.endTime) {
+          const start = new Date(d.startTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+          const end = new Date(d.endTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+          timingHtml = `<div style="font-size:12px; white-space:nowrap;"><span class="muted">Start:</span> ${start}<br/><span class="muted">End:</span> ${end}</div>`;
+        }
+
         tr.innerHTML = `
           <td style="font-weight:600;">${escapeHtml(d.title)}</td>
           <td><span class="badge">${escapeHtml(d.category)}</span></td>
-          <td class="muted">${escapeHtml(d.createdBy?.name || "Unknown")}</td>
+          <td>${phaseBadge}</td>
           <td>${statusBadge}</td>
+          <td>${timingHtml}</td>
           <td>
             <a class="btn btn-sm btn-ghost" href="/debate.html?id=${d._id}" target="_blank">View</a>
             ${!d.approved ? `<button class="btn btn-sm btn-good approve-btn" style="margin: 0 4px;" data-id="${d._id}">Approve</button>` : ''}

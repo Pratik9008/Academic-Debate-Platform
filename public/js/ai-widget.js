@@ -16,7 +16,7 @@ const AIWidget = (() => {
             <div class="ai-header-info">
               <div class="ai-avatar"></div>
               <div>
-                <strong id="ai-widget-title">Debate AI</strong>
+                <strong id="ai-widget-title">Academic Assistant</strong>
                 <span class="ai-status">Online</span>
               </div>
             </div>
