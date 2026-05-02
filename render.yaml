@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: academic-debate-platform
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_VERSION
+        value: 18.0.0
+      - key: PORT
+        value: 10000
+      - key: MONGODB_URI
+        fromValue: your_mongodb_uri_here
+      - key: JWT_SECRET
+        generateValue: true
+      - key: GROQ_API_KEY
+        fromValue: your_groq_api_key_here
+      - key: CLIENT_ORIGIN
+        value: https://academic-debate-platform.onrender.com
