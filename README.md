@@ -1,56 +1,70 @@
-# 🎓 Academic Debate Platform
+<div align="center">
+  <h1>🎓 Academic Debate Platform</h1>
+  <p><strong>A Next-Generation AI-Powered Platform for Structured Academic Debates</strong></p>
+  
+  [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+  [![Node.js Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen)](https://nodejs.org/)
+  [![AI Powered](https://img.shields.io/badge/AI-Llama%203.1-blueviolet)](https://groq.com/)
+  [![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-47A248?logo=mongodb)](https://www.mongodb.com/)
+</div>
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Node.js Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen)](https://nodejs.org/)
-[![AI Powered](https://img.shields.io/badge/AI-Llama%203.1-blueviolet)](https://groq.com/)
+<br />
 
-A premium, full-stack academic debate platform designed for rigorous intellectual exchange. Features a structured round system, real-time arguments, and AI-driven moderation and grading.
+## 📖 Abstract
+
+The **Academic Debate Platform** is a full-stack, real-time web application engineered to facilitate rigorous intellectual exchange among engineering students. Moving away from chaotic forum threads, this platform introduces a **structured round system** (Opening Arguments, Counterarguments, Final Statements) augmented by **Artificial Intelligence**. The system autonomously generates relevant B.Tech CSE topics, moderates discussions, and uses a Large Language Model (Llama 3.1) to grade participants based on logic, evidence, and argument structure.
 
 ---
 
 ## 🌐 Live Demo
-👉 [https://debate-platform-3iik.onrender.com](https://debate-platform-3iik.onrender.com)
+👉 **[https://debate-platform-3iik.onrender.com](https://debate-platform-3iik.onrender.com)**
 
 ---
 
-## ✨ Key Features
+## ✨ Key Features & Modules
 
-### 🧠 AI-Powered Moderation & Grading
-- **Automated Tournament Engine:** AI periodically generates high-quality technical debate topics across Science, Tech, and Politics.
-- **Instant Evaluation:** At the end of each debate, our Master AI (Llama 3.1) evaluates every argument based on logic, evidence, and structure.
-- **Smart Feedback:** Personalized feedback for every participant to help them improve their debating skills.
+### 1. 🧠 AI-Powered Automation (Master AI)
+- **Autonomous Topic Generation:** A background Cron engine automatically curates high-quality technical debate topics focused on Computer Science Engineering (e.g., *DSA vs Web Development*, *System Design Architecture*).
+- **Automated Grading System:** At the conclusion of a debate, the AI evaluates the transcript and scores every participant out of 100 based on logical reasoning and structural integrity.
+- **Smart Feedback:** Generates personalized, actionable feedback for each debater to enhance their analytical skills.
 
-### 🏛️ Structured Debate Rounds
-- **Round System:** Debates follow a clear sequence: Opening Arguments → Counterarguments → Final Statements.
-- **Threaded Discussions:** Arguments are organized into logical threads, making complex discussions easy to follow.
-- **Community Voting:** Users earn reputation points through community-driven upvotes on their arguments.
+### 2. 🏛️ Structured Debate Architecture
+- **Round-Based Progression:** Debates enforce a strict timeline and round sequence to maintain academic decorum.
+- **Threaded Discussions:** Arguments are hierarchically organized, preventing topic derailment.
+- **Peer Reputation System:** Users build their global reputation through community-driven upvotes on high-quality technical arguments.
 
-### 📊 Real-time & Interactive
-- **Live Matchmaking:** Find and join live debates instantly with Socket.io integration.
-- **Leaderboard:** Track top debaters globally based on reputation and AI scores.
-- **Analytics Dashboard:** Visualize argument distributions and debate health in real-time.
+### 3. 📊 Real-Time Interaction & Analytics
+- **Live Updates:** Powered by WebSockets (`Socket.io`) for instantaneous argument delivery and matchmaking without page reloads.
+- **Global Leaderboard:** Ranks top engineering debaters based on cumulative AI scores and community upvotes.
+- **Interactive Dashboards:** Real-time data visualization of argument distributions using Chart.js.
 
----
-
-## 🛠️ Tech Stack
-
-- **Frontend:** Vanilla JavaScript (ES6+), Modern CSS (Glassmorphism), Marked.js, Chart.js.
-- **Backend:** Node.js, Express.js.
-- **Database:** MongoDB with Mongoose ODM.
-- **Real-time:** Socket.io.
-- **AI Integration:** Groq SDK (Llama 3.1 8B/70B).
-- **Scheduling:** Node-cron.
+### 4. 🛡️ Role-Based Access Control (RBAC)
+- **Admin Portal:** Dedicated interface for moderators to approve/delete debates, override AI scores, and monitor platform health.
+- **User Profiles:** Personalized tracking of debate history, win rates, and AI feedback.
 
 ---
 
-## 🚀 Getting Started
+## 🛠️ Technology Stack
+
+| Layer | Technology | Description |
+|-------|------------|-------------|
+| **Frontend** | HTML5, CSS3, Vanilla JS | Glassmorphic UI design, highly responsive. |
+| **Backend** | Node.js, Express.js | RESTful API architecture. |
+| **Database** | MongoDB & Mongoose | NoSQL database for flexible transcript schemas. |
+| **Real-Time** | Socket.io | Bidirectional event-driven communication. |
+| **AI Engine** | Groq SDK (Llama 3.1) | Lightning-fast LLM inference for grading/generation. |
+| **Scheduling**| Node-cron | Hourly automated tournament and buffer management. |
+
+---
+
+## 🚀 Installation & Setup
 
 ### Prerequisites
-- Node.js (v18+)
-- MongoDB Atlas account
-- Groq API Key
+- [Node.js](https://nodejs.org/) (v18.0 or higher)
+- [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) Account (or local MongoDB)
+- [Groq API Key](https://console.groq.com/keys)
 
-### Installation
+### Steps to Run Locally
 
 1. **Clone the repository:**
    ```bash
@@ -64,38 +78,35 @@ A premium, full-stack academic debate platform designed for rigorous intellectua
    ```
 
 3. **Configure Environment Variables:**
-   Create a `.env` file in the root directory:
+   Create a `.env` file in the root directory and add:
    ```env
    PORT=3000
    MONGODB_URI=your_mongodb_connection_string
-   JWT_SECRET=your_super_secret_key
+   JWT_SECRET=your_super_secret_jwt_key
    GROQ_API_KEY=your_groq_api_key
-   CLIENT_ORIGIN=http://localhost:3000
    ```
 
-4. **Seed the Database (Optional):**
-   ```bash
-   npm run seed
-   ```
-
-5. **Run the Application:**
+4. **Run the Application:**
    ```bash
    npm run dev
    ```
+   *The server will start on `http://localhost:3000`.*
 
 ---
 
-## 🛡️ Admin & Moderation
-The platform includes a dedicated **Admin Portal** where moderators can:
-- Approve or delete pending debates.
-- Manage user reputations.
-- Override AI scores in special cases.
-- Monitor live tournament health.
+## 📸 System Interface
+
+*(Add screenshots of your project here for the presentation)*
+- **Home/Dashboard:** `![Dashboard](link-to-image)`
+- **Live Debate Arena:** `![Debate Arena](link-to-image)`
+- **AI Feedback & Grading:** `![Grading](link-to-image)`
 
 ---
 
-## 👨‍💻 Authors
-- **Pratik Kumar Singh**
+## 👨‍💻 Project Team / Authors
+
+This project was collaboratively developed by:
+- **Pratik Kumar Singh** 
 - **Yash Verma**
 - **RaviRala Rohith**
 
@@ -104,8 +115,7 @@ The platform includes a dedicated **Admin Portal** where moderators can:
 ## 📜 License
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
----
-
+<br />
 <p align="center">
-  Built with ❤️ for the Academic Community
+  <b>Built for the Academic & Engineering Community</b>
 </p>
