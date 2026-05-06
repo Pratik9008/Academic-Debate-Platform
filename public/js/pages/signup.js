@@ -1,6 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
   UI.initTheme();
-  UI.mountNavbar(); // Add glassmorphic navbar
 
   if (API.state.token) {
     location.href = "/index.html";

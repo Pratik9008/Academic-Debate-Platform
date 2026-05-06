@@ -18,23 +18,23 @@ async function generateEngineeringDebates(count = 5, isDemo = false, startFrom =
     }
 
     const techAreas = [
-      "Web Development and Frontend Frameworks",
-      "Backend Architectures and Microservices",
-      "Cloud Computing, AWS, and DevOps",
-      "Artificial Intelligence, LLMs, and Machine Learning",
+      "Data Structures & Algorithms (DSA) vs Web Development",
+      "Backend Architectures, Microservices, and System Design",
+      "Cloud Computing, AWS, and DevOps Practices",
+      "Artificial Intelligence, Generative AI, and Machine Learning",
       "Cybersecurity, Encryption, and Web Security",
-      "Database Systems, SQL, and Data Engineering",
-      "Mobile App Development (React Native, Flutter, Swift)",
+      "Database Management Systems (DBMS), SQL vs NoSQL",
+      "Mobile App Development (React Native, Flutter)",
       "Software Engineering Practices, Testing, and Agile",
-      "Internet of Things (IoT) and Edge Computing",
+      "Competitive Programming vs Open Source Contributions",
       "Blockchain, Web3, and Decentralized Systems",
-      "Operating Systems and Low-Level Programming",
-      "System Design, Scalability, and Performance"
+      "Operating Systems, Linux, and Low-Level Programming",
+      "Emerging Tech trends for B.Tech Placements and Internships"
     ];
     const randomArea = techAreas[Math.floor(Math.random() * techAreas.length)];
 
-    const prompt = `You are a curriculum director for a Computer Engineering degree. Generate exactly ${count} highly technical debate topics. 
-Focus SPECIFICALLY on this sub-field: ${randomArea}. Ensure the topics are very unique, specific, and not generic.
+    const prompt = `You are a technical mentor for B.Tech Computer Science Engineering (CSE) students in India. Generate exactly ${count} highly technical and engaging debate topics. 
+Focus SPECIFICALLY on this sub-field or dilemma: ${randomArea}. Ensure the topics are very relevant to B.Tech CSE students, placements, and modern tech industry trends. They must be unique, specific, and debatable.
 You must respond with ONLY a valid JSON array of objects. Do not include any other text or markdown formatting.
 Each object must have these exact keys: 
 "title" (string, max 100 chars), 
@@ -115,15 +115,15 @@ function initCronJobs() {
       console.log('[Cron] Startup: Checking debates...');
       
       // Check if we need to generate initial buffer
-      const existingDebates = await Debate.countDocuments({ status: { $in: ['upcoming', 'active'] } });
-      if (existingDebates === 0) {
-        console.log('[Cron] No active/upcoming debates found. Generating startup buffer (Current hour + Next 3 hours)...');
+      const upcomingDebates = await Debate.countDocuments({ status: 'upcoming' });
+      if (upcomingDebates < 10) {
+        console.log('[Cron] Low upcoming debates found. Generating startup buffer (Next 3 hours)...');
         const now = new Date();
-      for (let i = 0; i < 4; i++) {
+      for (let i = 0; i < 3; i++) {
         const targetHour = new Date(now);
-        targetHour.setHours(now.getHours() + i);
+        targetHour.setHours(now.getHours() + i + 1); // Next 3 hours
         targetHour.setMinutes(0, 0, 0);
-        await generateEngineeringDebates(5, false, targetHour, "upcoming");
+        await generateEngineeringDebates(4, false, targetHour, "upcoming");
         // Sleep 4 seconds between calls to avoid hitting Groq API rate limits
         await new Promise(r => setTimeout(r, 4000));
       }
@@ -135,28 +135,33 @@ function initCronJobs() {
     }
   })();
 
-  // 1. Midnight Auto-Generator (00:00 every day) schedules the ENTIRE 24 hours
-  cron.schedule('0 0 * * *', async () => {
-    console.log('[Cron] Midnight schedule triggered. Generating 24-hour schedule...');
+  // 1. Hourly Auto-Generator (Checks and maintains buffer)
+  cron.schedule('0 * * * *', async () => {
+    console.log('[Cron] Hourly schedule triggered. Checking debate buffer...');
     
-    // Close active debates from the previous day
-    await Debate.updateMany({ status: 'active' }, { status: 'completed' });
+    // Close active debates from the previous day (safeguard)
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    await Debate.updateMany({ status: 'active', endTime: { $lt: yesterday } }, { status: 'completed' });
     
-    const todayMidnight = new Date();
-    todayMidnight.setHours(0, 0, 0, 0);
-
-    // Loop through all 24 hours of the day
-    for (let hour = 0; hour < 24; hour++) {
-      const targetHour = new Date(todayMidnight);
-      targetHour.setHours(hour);
-      
-      // Generate 5 debates for this specific hour
-      await generateEngineeringDebates(5, false, targetHour, "upcoming");
-      
-      // Sleep for 8 seconds between each hour to completely avoid API token/rate limits
-      await new Promise(r => setTimeout(r, 8000));
+    const upcomingCount = await Debate.countDocuments({ status: 'upcoming' });
+    
+    if (upcomingCount < 15) {
+      console.log(`[Cron] Buffer low (${upcomingCount} upcoming). Generating new debates for next 4 hours...`);
+      const now = new Date();
+      for (let i = 1; i <= 4; i++) {
+        const targetHour = new Date(now);
+        targetHour.setHours(now.getHours() + i);
+        targetHour.setMinutes(0,0,0);
+        
+        await generateEngineeringDebates(4, false, targetHour, "upcoming");
+        // Sleep for 8 seconds between each hour to completely avoid API token/rate limits
+        await new Promise(r => setTimeout(r, 8000));
+      }
+      console.log('[Cron] Successfully replenished debate buffer.');
+    } else {
+      console.log(`[Cron] Buffer healthy (${upcomingCount} upcoming). No generation needed.`);
     }
-    console.log('[Cron] Successfully generated schedule for all 24 hours of the day.');
   });
 
   // 2. Every Minute Engine (Checks Starts, Ends, and Triggers Grading)

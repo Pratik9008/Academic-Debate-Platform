@@ -99,10 +99,8 @@ const UI = (() => {
       <div class="nav">
         <div class="container nav-inner">
           <a class="brand" href="/index.html">
-            <div class="brand-badge"></div>
             <div>
               <div class="brand-name">Academic Debate Platform</div>
-              <div class="muted2 brand-sub">Modern structured rounds • premium UX</div>
             </div>
           </a>
 
